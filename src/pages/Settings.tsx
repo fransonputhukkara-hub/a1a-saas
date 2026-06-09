@@ -44,6 +44,7 @@ export default function Settings() {
       instagram_link: settings.instagram_link || null,
       facebook_link: settings.facebook_link || null,
       google_link: settings.google_link || null,
+      website_link: settings.website_link || null,
     }).eq('id', 1)
     refreshShop()
     setMsg('Settings saved ✅')
@@ -95,6 +96,11 @@ export default function Settings() {
                   <Field label="Google Review Link">
                     <Input value={settings.google_link ?? ''} placeholder="https://g.page/r/…" onChange={(e) => set('google_link', e.target.value)} />
                   </Field>
+                  <div style={{ marginTop: 12 }}>
+                    <Field label="Shop Website Link">
+                      <Input value={settings.website_link ?? ''} placeholder="https://yourshop.com" onChange={(e) => set('website_link', e.target.value)} />
+                    </Field>
+                  </div>
                   <div className="form-row mb16" style={{ marginTop: 12 }}>
                     <Field label="Instagram Link">
                       <Input value={settings.instagram_link ?? ''} placeholder="https://instagram.com/…" onChange={(e) => set('instagram_link', e.target.value)} />

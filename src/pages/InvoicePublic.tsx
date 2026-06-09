@@ -95,10 +95,15 @@ export default function InvoicePublic() {
           )}
         </div>
 
-        {(shop.google_link || shop.instagram_link || shop.facebook_link) && (
+        {(shop.website_link || shop.google_link || shop.instagram_link || shop.facebook_link) && (
           <div style={{ padding: '18px 24px 4px', textAlign: 'center' }}>
             <div style={{ fontSize: '0.62rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: '#c9921a', marginBottom: 12 }}>Stay Connected With Us</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {shop.website_link && (
+                <a href={shop.website_link} target="_blank" rel="noopener noreferrer" style={{ ...socialBtn, background: '#6b1a1a', color: '#f5d98a' }}>
+                  🛍️ Visit our Website
+                </a>
+              )}
               {shop.google_link && (
                 <a href={shop.google_link} target="_blank" rel="noopener noreferrer" style={{ ...socialBtn, background: '#fff', color: '#3c4043', border: '1px solid #dadce0' }}>
                   <GoogleIcon /> Rate us on Google

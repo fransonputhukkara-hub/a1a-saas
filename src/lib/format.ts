@@ -8,6 +8,7 @@ export interface ShopLike {
   instagram_link?: string | null
   facebook_link?: string | null
   google_link?: string | null
+  website_link?: string | null
 }
 
 /** Format a number as Indian Rupees, e.g. 124000 -> "₹1,24,000". */
@@ -111,6 +112,7 @@ export function invoiceMessage(inv: Invoice, shop: ShopLike): string {
   const link = inv.id ? `\n🧾 View invoice: ${origin}/i/${inv.id}\n` : ''
 
   const socials: string[] = []
+  if (shop.website_link) socials.push(`🛍️ Shop online:\n${shop.website_link}`)
   if (shop.google_link) socials.push(`⭐ Rate us on Google:\n${shop.google_link}`)
   if (shop.instagram_link) socials.push(`📸 Instagram:\n${shop.instagram_link}`)
   if (shop.facebook_link) socials.push(`👍 Facebook:\n${shop.facebook_link}`)

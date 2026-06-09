@@ -10,6 +10,7 @@ export interface ShopInfo {
   instagram_link: string | null
   facebook_link: string | null
   google_link: string | null
+  website_link: string | null
 }
 
 const defaults: ShopInfo = {
@@ -21,6 +22,7 @@ const defaults: ShopInfo = {
   instagram_link: null,
   facebook_link: null,
   google_link: null,
+  website_link: null,
 }
 
 const ShopContext = createContext<{ shop: ShopInfo; refresh: () => void }>({
@@ -46,6 +48,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         instagram_link: row.instagram_link ?? null,
         facebook_link: row.facebook_link ?? null,
         google_link: row.google_link ?? null,
+        website_link: row.website_link ?? null,
       })
     })
   }

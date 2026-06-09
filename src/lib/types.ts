@@ -133,4 +133,5 @@ export interface Settings {
   instagram_link: string | null
   facebook_link: string | null
   google_link: string | null
+  website_link: string | null
 }
