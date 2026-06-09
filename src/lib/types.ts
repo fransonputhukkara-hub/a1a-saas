@@ -103,22 +103,6 @@ export interface Staff {
   created_at: string
 }
 
-export interface Payroll {
-  id: string
-  staff_id: string | null
-  staff_name: string | null
-  role: string | null
-  basic: number
-  present_days: number
-  working_days: number
-  advance: number
-  deductions: number
-  net_pay: number
-  month: string | null
-  status: string
-  created_at: string
-}
-
 export interface Settings {
   id: number
   shop_name: string

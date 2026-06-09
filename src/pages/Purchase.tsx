@@ -17,6 +17,10 @@ export default function Purchase() {
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // When set, we are editing an existing purchase rather than creating a new one.
+  // originalItems is the snapshot of what was saved, so stock only moves by the delta.
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [originalItems, setOriginalItems] = useState<LineItem[]>([])
 
   function load() {
     supabase
@@ -34,6 +38,24 @@ export default function Purchase() {
     setItems((arr) => arr.map((it, i) => (i === idx ? { ...it, ...patch } : it)))
   }
 
+  function resetForm() {
+    setEditingId(null)
+    setOriginalItems([])
+    setSupplier(''); setBillNo(''); setItems([blank()]); setPaymentMode('Credit (Due)'); setDate(today())
+  }
+
+  function startEdit(p: PurchaseRow) {
+    setError(null); setMsg(null)
+    setEditingId(p.id)
+    setOriginalItems(p.items ?? [])
+    setSupplier(p.supplier)
+    setBillNo(p.bill_no ?? '')
+    setDate(p.date)
+    setPaymentMode(p.payment_mode)
+    setItems(p.items?.length ? p.items.map((it) => ({ ...it })) : [blank()])
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   async function save() {
     setError(null); setMsg(null)
     const clean = items.filter((it) => it.name.trim() && Number(it.qty) > 0)
@@ -42,7 +64,7 @@ export default function Purchase() {
     setSaving(true)
     try {
       const status = paymentMode.toLowerCase().includes('credit') || paymentMode.toLowerCase().includes('due') ? 'due' : 'paid'
-      const { error: e } = await supabase.from('purchases').insert({
+      const payload = {
         supplier: supplier.trim(),
         bill_no: billNo.trim() || null,
         date,
@@ -50,11 +72,21 @@ export default function Purchase() {
         total: subtotal,
         payment_mode: paymentMode,
         status,
-      })
-      if (e) throw e
-      await adjustStock(clean, 1)
-      setMsg('Purchase saved and inventory updated ✅')
-      setSupplier(''); setBillNo(''); setItems([blank()]); setPaymentMode('Credit (Due)')
+      }
+      if (editingId) {
+        const { error: e } = await supabase.from('purchases').update(payload).eq('id', editingId)
+        if (e) throw e
+        // Stock moves only by the delta: reverse what the old bill added, then add the new bill.
+        await adjustStock(originalItems, -1)
+        await adjustStock(clean, 1)
+        setMsg('Purchase updated and stock adjusted ✅')
+      } else {
+        const { error: e } = await supabase.from('purchases').insert(payload)
+        if (e) throw e
+        await adjustStock(clean, 1)
+        setMsg('Purchase saved and inventory updated ✅')
+      }
+      resetForm()
       load()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save purchase.')
@@ -66,9 +98,14 @@ export default function Purchase() {
   return (
     <>
       <PageHeader
-        title="Purchase Entry"
-        sub="Record stock purchased from suppliers"
-        actions={<button className="btn btn-gold" onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save Purchase'}</button>}
+        title={editingId ? 'Edit Purchase' : 'Purchase Entry'}
+        sub={editingId ? 'Update this bill — stock moves only by the change' : 'Record stock purchased from suppliers'}
+        actions={
+          <>
+            {editingId && <button className="btn btn-outline" onClick={resetForm} disabled={saving}>Cancel</button>}
+            <button className="btn btn-gold" onClick={save} disabled={saving}>{saving ? 'Saving…' : editingId ? 'Update Purchase' : 'Save Purchase'}</button>
+          </>
+        }
       />
       {error && <div className="alert-strip a-red">{error}</div>}
       {msg && <div className="alert-strip a-green">{msg}</div>}
@@ -114,15 +151,16 @@ export default function Purchase() {
             ) : (
               <div className="table-wrap">
                 <table className="dt">
-                  <thead><tr><th>Date</th><th>Supplier</th><th>Bill No.</th><th className="r">Amount</th><th>Status</th></tr></thead>
+                  <thead><tr><th>Date</th><th>Supplier</th><th>Bill No.</th><th className="r">Amount</th><th>Status</th><th></th></tr></thead>
                   <tbody>
                     {recent.map((p) => (
-                      <tr key={p.id}>
+                      <tr key={p.id} className={editingId === p.id ? 'is-editing' : ''}>
                         <td>{shortDate(p.date)}</td>
                         <td>{p.supplier}</td>
                         <td>{p.bill_no ?? '—'}</td>
                         <td className="r">{inr(p.total)}</td>
                         <td><Pill tone={p.status === 'paid' ? 'green' : 'gold'}>{p.status === 'paid' ? 'Paid' : 'Due'}</Pill></td>
+                        <td className="r"><button className="btn btn-outline btn-sm" onClick={() => startEdit(p)}>Edit</button></td>
                       </tr>
                     ))}
                   </tbody>
@@ -137,7 +175,7 @@ export default function Purchase() {
             <div className="sum-row"><span>Items</span><span>{items.filter((i) => i.name.trim()).length}</span></div>
             <div className="sum-row total"><span>Grand Total</span><span>{inr(subtotal)}</span></div>
             <button className="btn btn-gold" style={{ width: '100%', marginTop: 14 }} onClick={save} disabled={saving}>
-              {saving ? 'Saving…' : 'Save & Update Stock'}
+              {saving ? 'Saving…' : editingId ? 'Update & Adjust Stock' : 'Save & Update Stock'}
             </button>
           </Card>
         </div>

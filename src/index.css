@@ -147,6 +147,14 @@ body {
 .btn-outline:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.95);
 }
+.btn-sm {
+  padding: 5px 12px;
+  font-size: 0.75rem;
+  border-radius: 9px;
+}
+.dt tr.is-editing td {
+  background: rgba(201, 168, 76, 0.12);
+}
 
 /* ============================================================
    Shared component layer (glass theme)

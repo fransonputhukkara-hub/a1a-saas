@@ -14,7 +14,6 @@ import SalesReturn from './pages/SalesReturn'
 import Inventory from './pages/Inventory'
 import ProductFlow from './pages/ProductFlow'
 import Expenses from './pages/Expenses'
-import Payroll from './pages/Payroll'
 import Reports from './pages/Reports'
 import WhatsApp from './pages/WhatsApp'
 import Settings from './pages/Settings'
@@ -70,7 +69,6 @@ export default function App() {
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/product-flow" element={<ProductFlow />} />
             <Route path="/expenses" element={<Expenses />} />
-            <Route path="/payroll" element={<Payroll />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/whatsapp" element={<WhatsApp />} />
             <Route path="/settings" element={<Settings />} />

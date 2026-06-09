@@ -46,9 +46,9 @@ role only. Invoice numbers are generated atomically by the `next_invoice_number(
 SQL function in the format `SB-YYYY-0001`.
 
 Tables: `customers`, `invoices`, `purchases`, `purchase_returns`, `sales_returns`,
-`inventory`, `expenses`, `staff`, `payroll`, `settings`.
+`inventory`, `expenses`, `staff`, `settings`.
 
-## Build Progress — all 14 screens complete ✅
+## Build Progress — 13 screens complete ✅
 
 - [x] 1. Project setup + Supabase config + Login page
 - [x] 2. Dashboard — live stats, 6-month sales chart, low-stock & today's deliveries
@@ -60,15 +60,14 @@ Tables: `customers`, `invoices`, `purchases`, `purchase_returns`, `sales_returns
 - [x] 8. Inventory — add/edit, low-stock red highlight, KPIs, search
 - [x] 9. Product Flow Analysis — opening/purchased/sold/returned/closing, fast/slow tags
 - [x] 10. Expenses — category ledger + breakdown chart
-- [x] 11. Payroll — editable attendance, advances, net pay, mark paid
-- [x] 12. Reports — monthly P&L, revenue by category, invoice summary
-- [x] 13. WhatsApp Remarketing — All / VIP / Lost / Balance-Due segments + templates (wa.me links)
-- [x] 14. Settings — shop profile, invoice prefs, staff management, feature toggles
+- [x] 11. Reports — monthly P&L, revenue by category, invoice summary
+- [x] 12. WhatsApp Remarketing — All / VIP / Lost / Balance-Due segments + templates (wa.me links)
+- [x] 13. Settings — shop profile, invoice prefs, staff management, feature toggles
 
 ## Routes
 
 `/` Dashboard · `/sale` · `/customers` · `/purchase` · `/purchase-return` ·
-`/sales-return` · `/inventory` · `/product-flow` · `/expenses` · `/payroll` ·
+`/sales-return` · `/inventory` · `/product-flow` · `/expenses` ·
 `/reports` · `/whatsapp` · `/settings` · `/login`
 
 ## Deploy (Vercel)

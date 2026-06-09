@@ -24,7 +24,7 @@ export default function Settings() {
     waReminders: true, lowStock: true, lostCustomers: true, loyalty: false,
     showLogo: true, showBalance: true, showDelivery: true, duplicateCopy: false,
     waInvoice: true, waDelivery: true, waBalance: true, waFestival: false, waWinback: false,
-    nLowStock: true, nOverdue: true, nDaily: true, nNewCust: false, nPayroll: true, nDelivery: true,
+    nLowStock: true, nOverdue: true, nDaily: true, nNewCust: false, nDelivery: true,
   })
 
   async function load() {
@@ -155,7 +155,6 @@ export default function Settings() {
                   <ToggleRow label="Overdue Payment Alert" on={toggles.nOverdue} onChange={tg('nOverdue')} />
                   <ToggleRow label="Daily Sales Summary" on={toggles.nDaily} onChange={tg('nDaily')} />
                   <ToggleRow label="New Customer Alert" on={toggles.nNewCust} onChange={tg('nNewCust')} />
-                  <ToggleRow label="Payroll Reminder" sub="Alert on 28th of every month" on={toggles.nPayroll} onChange={tg('nPayroll')} />
                   <ToggleRow label="Delivery Due Today" on={toggles.nDelivery} onChange={tg('nDelivery')} />
                 </Card>
               )}
@@ -209,7 +208,7 @@ export default function Settings() {
                   </div>
                   <div className="card-title">Included</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {['Unlimited Invoices', 'Unlimited Customers', 'WhatsApp Remarketing', 'Inventory Management', 'Reports & Analytics', 'Payroll & Expenses'].map((f) => (
+                    {['Unlimited Invoices', 'Unlimited Customers', 'WhatsApp Remarketing', 'Inventory Management', 'Reports & Analytics', 'Expenses Management'].map((f) => (
                       <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.82rem' }}><span style={{ color: 'var(--green)', fontWeight: 700 }}>✓</span> {f}</div>
                     ))}
                   </div>

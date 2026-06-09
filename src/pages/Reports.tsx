@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import type { Invoice, Purchase, Expense, Payroll, SalesReturn, InventoryItem } from '../lib/types'
-import { inr, inrShort, shortDate, isThisMonth, monthKey, monthLabel } from '../lib/format'
+import type { Invoice, Purchase, Expense, SalesReturn, InventoryItem } from '../lib/types'
+import { inr, inrShort, shortDate, isThisMonth, monthLabel } from '../lib/format'
 import { Card, PageHeader, Pill, Kpi, BarChart, Empty } from '../components/ui'
 
 export default function Reports() {
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [purchases, setPurchases] = useState<Purchase[]>([])
   const [expenses, setExpenses] = useState<Expense[]>([])
-  const [payroll, setPayroll] = useState<Payroll[]>([])
   const [returns, setReturns] = useState<SalesReturn[]>([])
   const [inventory, setInventory] = useState<InventoryItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -18,14 +17,12 @@ export default function Reports() {
       supabase.from('invoices').select('*').order('created_at', { ascending: false }),
       supabase.from('purchases').select('*'),
       supabase.from('expenses').select('*'),
-      supabase.from('payroll').select('*').eq('month', monthKey()),
       supabase.from('sales_returns').select('*'),
       supabase.from('inventory').select('*'),
-    ]).then(([i, p, e, pr, sr, inv]) => {
+    ]).then(([i, p, e, sr, inv]) => {
       setInvoices((i.data as Invoice[]) ?? [])
       setPurchases((p.data as Purchase[]) ?? [])
       setExpenses((e.data as Expense[]) ?? [])
-      setPayroll((pr.data as Payroll[]) ?? [])
       setReturns((sr.data as SalesReturn[]) ?? [])
       setInventory((inv.data as InventoryItem[]) ?? [])
       setLoading(false)
@@ -38,8 +35,7 @@ export default function Reports() {
   const cogs = purchases.filter((p) => isThisMonth(p.created_at)).reduce((s, p) => s + Number(p.total), 0)
   const grossProfit = netSales - cogs
   const expenseTotal = expenses.filter((e) => isThisMonth(e.date)).reduce((s, e) => s + Number(e.amount), 0)
-  const payrollTotal = payroll.reduce((s, p) => s + Number(p.net_pay), 0)
-  const netProfit = grossProfit - expenseTotal - payrollTotal
+  const netProfit = grossProfit - expenseTotal
   const pending = invoices.reduce((s, i) => s + Number(i.balance_due), 0)
 
   // Revenue by inventory category
@@ -62,7 +58,7 @@ export default function Reports() {
       <div className="g4 mb16">
         <Kpi value={inrShort(grossSales)} label="Gross Sales" color="var(--green)" />
         <Kpi value={inrShort(cogs)} label="Total Purchase" color="var(--blue)" />
-        <Kpi value={inrShort(expenseTotal + payrollTotal)} label="Expenses + Payroll" color="var(--red)" />
+        <Kpi value={inrShort(expenseTotal)} label="Expenses" color="var(--red)" />
         <Kpi value={inrShort(netProfit)} label="Net Profit" color="var(--gold)" />
       </div>
 
@@ -80,7 +76,6 @@ export default function Reports() {
             <div className="sum-row"><span>Cost of Goods</span><span>– {inr(cogs)}</span></div>
             <div className="sum-row"><span style={{ fontWeight: 600 }}>Gross Profit</span><span style={{ color: 'var(--green)', fontWeight: 600 }}>{inr(grossProfit)}</span></div>
             <div className="sum-row"><span>Expenses</span><span>– {inr(expenseTotal)}</span></div>
-            <div className="sum-row"><span>Payroll</span><span>– {inr(payrollTotal)}</span></div>
             <div className="sum-row total"><span>Net Profit</span><span style={{ color: netProfit >= 0 ? 'var(--green)' : 'var(--red)' }}>{inr(netProfit)}</span></div>
           </div>
         </Card>
