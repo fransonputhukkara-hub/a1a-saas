@@ -5,11 +5,11 @@ import ErrorBoundary from './components/ErrorBoundary'
 import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/Layout'
 import Login from './pages/Login'
+import InvoicePublic from './pages/InvoicePublic'
 import Dashboard from './pages/Dashboard'
 import Sale from './pages/Sale'
 import Customers from './pages/Customers'
 import Purchase from './pages/Purchase'
-import PurchaseReturn from './pages/PurchaseReturn'
 import SalesReturn from './pages/SalesReturn'
 import Inventory from './pages/Inventory'
 import ProductFlow from './pages/ProductFlow'
@@ -53,6 +53,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/i/:id" element={<InvoicePublic />} />
           <Route
             element={
               <ProtectedRoute>
@@ -64,7 +65,6 @@ export default function App() {
             <Route path="/sale" element={<Sale />} />
             <Route path="/customers" element={<Customers />} />
             <Route path="/purchase" element={<Purchase />} />
-            <Route path="/purchase-return" element={<PurchaseReturn />} />
             <Route path="/sales-return" element={<SalesReturn />} />
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/product-flow" element={<ProductFlow />} />

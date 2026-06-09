@@ -35,7 +35,6 @@ const SECTIONS: { heading: string; items: NavDef[] }[] = [
     heading: 'Transactions',
     items: [
       { to: '/purchase', label: 'Purchase', icon: I(<><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 01-8 0" /></>) },
-      { to: '/purchase-return', label: 'Purchase Return', icon: I(<><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 102.13-9.36L1 10" /></>) },
       { to: '/sale', label: 'Sale / Invoice', badge: '+', icon: I(<><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="12" y1="18" x2="12" y2="12" /><line x1="9" y1="15" x2="15" y2="15" /></>) },
       { to: '/sales-return', label: 'Sales Return', icon: I(<><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" /></>) },
     ],

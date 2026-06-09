@@ -71,6 +71,8 @@ export function invoiceMessage(inv: Invoice): string {
   const balanceLine = Number(inv.balance_due) > 0
     ? `Balance Due: ${inr(inv.balance_due)}\n`
     : `Paid in Full ✓\n`
+  const origin = typeof window !== 'undefined' ? window.location.origin : ''
+  const link = inv.id ? `\n🧾 View invoice: ${origin}/i/${inv.id}\n` : ''
   return (
     `🏪 ${SHOP.name}\n` +
     `${SHOP.location.split(',')[0]} | ${SHOP.phone}\n\n` +
@@ -80,7 +82,8 @@ export function invoiceMessage(inv: Invoice): string {
     `Total: ${inr(inv.total)}\n` +
     `Paid (${inv.payment_method}): ${inr(inv.advance)}\n` +
     balanceLine +
-    `\nDelivery: ${longDate(inv.delivery_date)}\n\n` +
-    `Thank you! 🙏`
+    `\nDelivery: ${longDate(inv.delivery_date)}\n` +
+    link +
+    `\nThank you! 🙏`
   )
 }
