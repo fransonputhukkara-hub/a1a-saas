@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import type { Customer, Invoice } from '../lib/types'
-import { inr, shortDate, longDate } from '../lib/format'
+import { inr, shortDate, longDate, customerVCard, downloadVcf } from '../lib/format'
 import { Card, PageHeader, Pill, Field, Input, Empty } from '../components/ui'
+import { useShop } from '../lib/ShopContext'
 
 export default function Customers() {
   const navigate = useNavigate()
+  const { shop } = useShop()
   const [customers, setCustomers] = useState<Customer[]>([])
   const [balances, setBalances] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
@@ -36,14 +38,30 @@ export default function Customers() {
 
   async function addCustomer() {
     if (!form.name.trim()) return
+    const name = form.name.trim()
+    const phone = form.phone.trim()
     await supabase.from('customers').insert({
-      name: form.name.trim(),
-      phone: form.phone.trim() || null,
+      name,
+      phone: phone || null,
       address: form.address.trim() || null,
     })
+    // Offer to save the new customer straight to the phone's contacts so
+    // WhatsApp shows their name. (Downloads a .vcf the owner taps to import.)
+    if (phone) downloadVcf(`${name}.vcf`, customerVCard(name, phone, shop.name))
     setForm({ name: '', phone: '', address: '' })
     setAdding(false)
     load()
+  }
+
+  function saveContact(c: Customer) {
+    if (!c.phone) return
+    downloadVcf(`${c.name}.vcf`, customerVCard(c.name, c.phone, shop.name))
+  }
+  function exportAllContacts() {
+    const withPhone = customers.filter((c) => c.phone)
+    if (withPhone.length === 0) return
+    const all = withPhone.map((c) => customerVCard(c.name, c.phone, shop.name)).join('\r\n')
+    downloadVcf(`${shop.name.replace(/[^\w]+/g, '-')}-contacts.vcf`, all)
   }
 
   async function openHistory(c: Customer) {
@@ -83,9 +101,14 @@ export default function Customers() {
         title="Customers"
         sub={`${customers.length} registered · ${newThisMonth} new this month`}
         actions={
-          <button className="btn btn-gold" onClick={() => setAdding((v) => !v)}>
-            ＋ Add Customer
-          </button>
+          <>
+            <button className="btn btn-outline" onClick={exportAllContacts} title="Download all customers as a .vcf to import into your phone">
+              📇 Export Contacts
+            </button>
+            <button className="btn btn-gold" onClick={() => setAdding((v) => !v)}>
+              ＋ Add Customer
+            </button>
+          </>
         }
       />
 
@@ -158,7 +181,10 @@ export default function Customers() {
                   {selected.phone ?? '—'} · {selected.address ?? '—'} · Joined {longDate(selected.created_at)}
                 </div>
               </div>
-              <button className="btn btn-outline" onClick={() => setSelected(null)}>Close</button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {selected.phone && <button className="btn btn-gold" onClick={() => saveContact(selected)}>📇 Save Contact</button>}
+                <button className="btn btn-outline" onClick={() => setSelected(null)}>Close</button>
+              </div>
             </div>
             <div className="g3 mb16">
               <div className="kpi-tile"><div className="kpi-val">{selected.total_orders}</div><div className="kpi-key">Orders</div></div>

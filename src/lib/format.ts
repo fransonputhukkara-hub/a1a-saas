@@ -66,6 +66,33 @@ export function lineTotal(items: LineItem[]): number {
   return items.reduce((s, it) => s + Number(it.qty || 0) * Number(it.rate || 0), 0)
 }
 
+/** Build a single vCard (.vcf) entry for a customer. */
+export function customerVCard(name: string, phone: string | null | undefined, shopName?: string): string {
+  const tel = (phone ?? '').trim()
+  return [
+    'BEGIN:VCARD',
+    'VERSION:3.0',
+    `FN:${name}`,
+    `N:${name};;;;`,
+    tel ? `TEL;TYPE=CELL:${tel}` : '',
+    shopName ? `NOTE:Customer of ${shopName}` : '',
+    'END:VCARD',
+  ].filter(Boolean).join('\r\n')
+}
+
+/** Trigger a download of a .vcf contact file in the browser. */
+export function downloadVcf(filename: string, vcards: string) {
+  const blob = new Blob([vcards], { type: 'text/vcard;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename.endsWith('.vcf') ? filename : `${filename}.vcf`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
 /** Build a wa.me link with a pre-filled, URL-encoded message. */
 export function whatsappLink(phone: string | null | undefined, message: string): string {
   const digits = (phone ?? '').replace(/[^\d]/g, '')
