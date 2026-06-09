@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import type { Settings as SettingsRow } from '../lib/types'
 import { Card, PageHeader, Field, Input, ToggleRow, Empty } from '../components/ui'
 import { useShop } from '../lib/ShopContext'
+import LogoCropper from '../components/LogoCropper'
 
 type Tab = 'shop' | 'invoice' | 'whatsapp' | 'notifications' | 'plan'
 
@@ -19,6 +20,7 @@ export default function Settings() {
   const [tab, setTab] = useState<Tab>('shop')
   const [settings, setSettings] = useState<SettingsRow | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
+  const [cropFile, setCropFile] = useState<File | null>(null)
   const [toggles, setToggles] = useState<Record<string, boolean>>({
     waReminders: true, lowStock: true, lostCustomers: true, loyalty: false,
     showLogo: true, showBalance: true, showDelivery: true, duplicateCopy: false,
@@ -51,11 +53,10 @@ export default function Settings() {
     setTimeout(() => setMsg(null), 2500)
   }
 
-  async function uploadLogo(file: File) {
+  async function uploadLogo(blob: Blob) {
     if (!settings) return
-    const ext = (file.name.split('.').pop() || 'png').toLowerCase()
-    const path = `shop-logo-${Date.now()}.${ext}`
-    const { error: upErr } = await supabase.storage.from('logos').upload(path, file, { upsert: true })
+    const path = `shop-logo-${Date.now()}.png`
+    const { error: upErr } = await supabase.storage.from('logos').upload(path, blob, { upsert: true, contentType: 'image/png' })
     if (upErr) { setMsg('Logo upload failed: ' + upErr.message); return }
     const { data } = supabase.storage.from('logos').getPublicUrl(path)
     const url = data.publicUrl
@@ -109,7 +110,7 @@ export default function Settings() {
                       <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
                         <label className="btn btn-outline btn-sm" style={{ cursor: 'pointer' }}>
                           {settings.logo_url ? 'Change Logo' : '⬆ Upload Logo'}
-                          <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadLogo(f); e.target.value = '' }} />
+                          <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => { const f = e.target.files?.[0]; if (f) setCropFile(f); e.target.value = '' }} />
                         </label>
                         {settings.logo_url && <button className="btn btn-outline btn-sm btn-danger" onClick={removeLogo}>Remove</button>}
                       </div>
@@ -221,6 +222,14 @@ export default function Settings() {
           )}
         </div>
       </div>
+
+      {cropFile && (
+        <LogoCropper
+          file={cropFile}
+          onCancel={() => setCropFile(null)}
+          onSave={(blob) => { setCropFile(null); uploadLogo(blob) }}
+        />
+      )}
     </>
   )
 }
