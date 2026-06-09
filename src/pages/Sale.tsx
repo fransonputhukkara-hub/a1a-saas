@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase, SHOP } from '../lib/supabase'
 import type { Customer, Invoice, InventoryItem, LineItem } from '../lib/types'
 import { inr, today, whatsappLink, invoiceMessage } from '../lib/format'
-import { Card, PageHeader, Field, Input } from '../components/ui'
+import { Card, PageHeader, Field, Input, Select } from '../components/ui'
 
 const blankItem = (): LineItem => ({ name: '', qty: 1, rate: 0 })
 
@@ -24,6 +24,7 @@ export default function Sale() {
   const [items, setItems] = useState<LineItem[]>([blankItem()])
   const [discount, setDiscount] = useState(0)
   const [advance, setAdvance] = useState(0)
+  const [paymentMethod, setPaymentMethod] = useState('Cash')
 
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState<Invoice | null>(null)
@@ -146,6 +147,7 @@ export default function Sale() {
           advance: Number(advance || 0),
           total,
           balance_due: balance,
+          payment_method: paymentMethod,
           delivery_date: deliveryDate || null,
           trial_date: trialDate || null,
           status,
@@ -184,6 +186,7 @@ export default function Sale() {
     setItems([blankItem()])
     setDiscount(0)
     setAdvance(0)
+    setPaymentMethod('Cash')
   }
 
   // ── Saved confirmation view ──
@@ -235,8 +238,12 @@ export default function Sale() {
               <div className="sum-row"><span>Subtotal</span><span>{inr(saved.subtotal)}</span></div>
               <div className="sum-row"><span>Discount</span><span style={{ color: 'var(--green)' }}>–{inr(saved.discount)}</span></div>
               <div className="sum-row total"><span>Total</span><span>{inr(saved.total)}</span></div>
-              <div className="sum-row paid"><span>Advance</span><span>{inr(saved.advance)}</span></div>
-              <div className="sum-row balance"><span>Balance Due</span><span>{inr(saved.balance_due)}</span></div>
+              <div className="sum-row paid"><span>Paid via {saved.payment_method}</span><span>{inr(saved.advance)}</span></div>
+              {Number(saved.balance_due) > 0 ? (
+                <div className="sum-row balance"><span>Balance Due</span><span>{inr(saved.balance_due)}</span></div>
+              ) : (
+                <div className="sum-row" style={{ color: 'var(--green)', fontWeight: 600 }}><span>Paid in Full</span><span>✓</span></div>
+              )}
               <div className="no-print" style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <a
                   className="btn btn-gold"
@@ -378,10 +385,17 @@ export default function Sale() {
 
           <Card title="Payment">
             <div className="form-row">
+              <Field label="Payment Method">
+                <Select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
+                  <option>Cash</option><option>UPI</option><option>Credit</option>
+                </Select>
+              </Field>
               <Field label="Discount (₹)">
                 <Input type="number" min={0} value={discount} onChange={(e) => setDiscount(Number(e.target.value))} />
               </Field>
-              <Field label="Advance (₹)">
+            </div>
+            <div className="form-row">
+              <Field label="Amount Paid (₹)">
                 <Input type="number" min={0} value={advance} onChange={(e) => setAdvance(Number(e.target.value))} />
               </Field>
             </div>
@@ -393,8 +407,12 @@ export default function Sale() {
             <div className="sum-row"><span>Subtotal</span><span>{inr(subtotal)}</span></div>
             <div className="sum-row"><span>Discount</span><span style={{ color: 'var(--green)' }}>–{inr(discount)}</span></div>
             <div className="sum-row total"><span>Total</span><span>{inr(total)}</span></div>
-            <div className="sum-row paid"><span>Advance</span><span>{inr(advance)}</span></div>
-            <div className="sum-row balance"><span>Balance Due</span><span>{inr(balance)}</span></div>
+            <div className="sum-row paid"><span>Amount Paid ({paymentMethod})</span><span>{inr(advance)}</span></div>
+            {balance > 0 ? (
+              <div className="sum-row balance"><span>Balance Due</span><span>{inr(balance)}</span></div>
+            ) : (
+              <div className="sum-row" style={{ color: 'var(--green)', fontWeight: 600 }}><span>Paid in Full</span><span>✓</span></div>
+            )}
             <button className="btn btn-gold" style={{ width: '100%', marginTop: 16 }} onClick={save} disabled={saving}>
               {saving ? 'Saving…' : 'Generate & Save'}
             </button>

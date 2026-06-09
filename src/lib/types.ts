@@ -28,6 +28,7 @@ export interface Invoice {
   advance: number
   total: number
   balance_due: number
+  payment_method: string
   delivery_date: string | null
   trial_date: string | null
   status: string

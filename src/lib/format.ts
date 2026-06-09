@@ -68,6 +68,9 @@ export function invoiceMessage(inv: Invoice): string {
   const lines = inv.items
     .map((it) => `• ${it.name} x${it.qty} — ${inr(Number(it.qty) * Number(it.rate))}`)
     .join('\n')
+  const balanceLine = Number(inv.balance_due) > 0
+    ? `Balance Due: ${inr(inv.balance_due)}\n`
+    : `Paid in Full ✓\n`
   return (
     `🏪 ${SHOP.name}\n` +
     `${SHOP.location.split(',')[0]} | ${SHOP.phone}\n\n` +
@@ -75,9 +78,9 @@ export function invoiceMessage(inv: Invoice): string {
     `Customer: ${inv.customer_name ?? ''}\n\n` +
     `Items:\n${lines}\n\n` +
     `Total: ${inr(inv.total)}\n` +
-    `Advance Paid: ${inr(inv.advance)}\n` +
-    `Balance Due: ${inr(inv.balance_due)}\n\n` +
-    `Delivery: ${longDate(inv.delivery_date)}\n\n` +
+    `Paid (${inv.payment_method}): ${inr(inv.advance)}\n` +
+    balanceLine +
+    `\nDelivery: ${longDate(inv.delivery_date)}\n\n` +
     `Thank you! 🙏`
   )
 }
