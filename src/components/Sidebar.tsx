@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import type { ReactNode } from 'react'
-import { SHOP } from '../lib/supabase'
+import { useShop } from '../lib/ShopContext'
 
 const I = (children: ReactNode) => (
   <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -77,13 +77,12 @@ const SECTIONS: { heading: string; items: NavDef[] }[] = [
 ]
 
 export default function Sidebar({ open, onNavigate }: { open?: boolean; onNavigate?: () => void }) {
+  const { shop } = useShop()
   return (
     <aside className={`sidebar glass-sidebar ${open ? 'open' : ''}`}>
       <div className="sidebar-logo">
-        <div className="logo-text">
-          St. <span>Thomas</span>
-        </div>
-        <div className="logo-sub">Men's Wear · Business Suite</div>
+        <div className="logo-text">{shop.name}</div>
+        <div className="logo-sub">Business Suite</div>
       </div>
       <nav className="sidebar-nav">
         {SECTIONS.map((sec) => (
@@ -106,8 +105,8 @@ export default function Sidebar({ open, onNavigate }: { open?: boolean; onNaviga
         ))}
       </nav>
       <div className="sidebar-footer">
-        <strong>{SHOP.name}</strong>
-        {SHOP.location}
+        <strong>{shop.name}</strong>
+        {shop.location}
       </div>
     </aside>
   )

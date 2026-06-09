@@ -123,4 +123,7 @@ export interface Settings {
   invoice_prefix: string
   invoice_footer: string
   last_invoice_seq: number
+  instagram_link: string | null
+  facebook_link: string | null
+  google_link: string | null
 }

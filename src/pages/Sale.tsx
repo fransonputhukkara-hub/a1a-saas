@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { supabase, SHOP } from '../lib/supabase'
+import { supabase } from '../lib/supabase'
 import type { Customer, Invoice, InventoryItem, LineItem } from '../lib/types'
 import { inr, today, whatsappLink, invoiceMessage } from '../lib/format'
+import { useShop } from '../lib/ShopContext'
 import { Card, PageHeader, Field, Input, Select } from '../components/ui'
 
 const blankItem = (): LineItem => ({ name: '', qty: 1, rate: 0 })
 
 export default function Sale() {
+  const { shop } = useShop()
   const [customers, setCustomers] = useState<Customer[]>([])
   const [inventory, setInventory] = useState<InventoryItem[]>([])
   const [scanCode, setScanCode] = useState('')
@@ -206,8 +208,8 @@ export default function Sale() {
           <Card title="Invoice">
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
               <div>
-                <div className="font-serif" style={{ fontSize: '1.2rem' }}>{SHOP.name}</div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>{SHOP.location} · {SHOP.phone}</div>
+                <div className="font-serif" style={{ fontSize: '1.2rem' }}>{shop.name}</div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>{shop.location} · {shop.phone}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontWeight: 700 }}>#{saved.invoice_number}</div>
@@ -247,7 +249,7 @@ export default function Sale() {
               <div className="no-print" style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <a
                   className="btn btn-gold"
-                  href={whatsappLink(saved.customer_phone, invoiceMessage(saved))}
+                  href={whatsappLink(saved.customer_phone, invoiceMessage(saved, shop))}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ width: '100%' }}

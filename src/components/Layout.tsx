@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import { useAuth } from '../lib/AuthContext'
-import { SHOP } from '../lib/supabase'
+import { useShop } from '../lib/ShopContext'
 
 const PAGE_META: Record<string, { title: string; sub: string }> = {
-  '/': { title: 'Dashboard', sub: `Good day, ${SHOP.owner} 👋` },
+  '/': { title: 'Dashboard', sub: '' },
   '/purchase': { title: 'Purchase Entry', sub: 'Record supplier purchases' },
   '/purchase-return': { title: 'Purchase Return', sub: 'Return to suppliers' },
   '/sale': { title: 'New Sale / Invoice', sub: 'Create a bill' },
@@ -23,9 +23,11 @@ const PAGE_META: Record<string, { title: string; sub: string }> = {
 export default function Layout() {
   const [open, setOpen] = useState(false)
   const { signOut } = useAuth()
+  const { shop } = useShop()
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const meta = PAGE_META[pathname] ?? { title: '', sub: '' }
+  if (pathname === '/') meta.sub = `Good day, ${shop.owner} 👋`
 
   return (
     <div className="app-shell">

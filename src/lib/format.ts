@@ -1,5 +1,14 @@
-import { SHOP } from './supabase'
 import type { Invoice, LineItem } from './types'
+
+/** Shop fields needed to render a bill / message. */
+export interface ShopLike {
+  name: string
+  location: string
+  phone: string
+  instagram_link?: string | null
+  facebook_link?: string | null
+  google_link?: string | null
+}
 
 /** Format a number as Indian Rupees, e.g. 124000 -> "₹1,24,000". */
 export function inr(n: number | null | undefined): string {
@@ -64,7 +73,7 @@ export function whatsappLink(phone: string | null | undefined, message: string):
 }
 
 /** Standard invoice WhatsApp message. */
-export function invoiceMessage(inv: Invoice): string {
+export function invoiceMessage(inv: Invoice, shop: ShopLike): string {
   const lines = inv.items
     .map((it) => `• ${it.name} x${it.qty} — ${inr(Number(it.qty) * Number(it.rate))}`)
     .join('\n')
@@ -73,9 +82,16 @@ export function invoiceMessage(inv: Invoice): string {
     : `Paid in Full ✓\n`
   const origin = typeof window !== 'undefined' ? window.location.origin : ''
   const link = inv.id ? `\n🧾 View invoice: ${origin}/i/${inv.id}\n` : ''
+
+  const socials: string[] = []
+  if (shop.google_link) socials.push(`⭐ Review us: ${shop.google_link}`)
+  if (shop.instagram_link) socials.push(`📸 Instagram: ${shop.instagram_link}`)
+  if (shop.facebook_link) socials.push(`👍 Facebook: ${shop.facebook_link}`)
+  const socialBlock = socials.length ? `\n${socials.join('\n')}\n` : ''
+
   return (
-    `🏪 ${SHOP.name}\n` +
-    `${SHOP.location.split(',')[0]} | ${SHOP.phone}\n\n` +
+    `🏪 ${shop.name}\n` +
+    `${shop.location.split(',')[0]} | ${shop.phone}\n\n` +
     `Invoice: #${inv.invoice_number}\n` +
     `Customer: ${inv.customer_name ?? ''}\n\n` +
     `Items:\n${lines}\n\n` +
@@ -84,6 +100,7 @@ export function invoiceMessage(inv: Invoice): string {
     balanceLine +
     `\nDelivery: ${longDate(inv.delivery_date)}\n` +
     link +
+    socialBlock +
     `\nThank you! 🙏`
   )
 }

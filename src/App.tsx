@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './lib/AuthContext'
+import { ShopProvider } from './lib/ShopContext'
 import { supabaseConfigError } from './lib/supabase'
 import ErrorBoundary from './components/ErrorBoundary'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -50,6 +51,7 @@ export default function App() {
   return (
     <ErrorBoundary>
     <AuthProvider>
+      <ShopProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -76,6 +78,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
+      </ShopProvider>
     </AuthProvider>
     </ErrorBoundary>
   )

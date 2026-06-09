@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Settings as SettingsRow, Staff } from '../lib/types'
 import { Card, PageHeader, Pill, Field, Input, Select, ToggleRow, Empty } from '../components/ui'
+import { useShop } from '../lib/ShopContext'
 
 type Tab = 'shop' | 'invoice' | 'whatsapp' | 'notifications' | 'staff' | 'plan'
 
@@ -15,6 +16,7 @@ const TABS: { id: Tab; label: string }[] = [
 ]
 
 export default function Settings() {
+  const { refresh: refreshShop } = useShop()
   const [tab, setTab] = useState<Tab>('shop')
   const [settings, setSettings] = useState<SettingsRow | null>(null)
   const [staff, setStaff] = useState<Staff[]>([])
@@ -46,7 +48,11 @@ export default function Settings() {
       location: settings.location,
       invoice_prefix: settings.invoice_prefix,
       invoice_footer: settings.invoice_footer,
+      instagram_link: settings.instagram_link || null,
+      facebook_link: settings.facebook_link || null,
+      google_link: settings.google_link || null,
     }).eq('id', 1)
+    refreshShop()
     setMsg('Settings saved ✅')
     setTimeout(() => setMsg(null), 2500)
   }
@@ -101,6 +107,22 @@ export default function Settings() {
                   <div className="form-row mb16">
                     <Field label="Phone"><Input value={settings.phone} onChange={(e) => set('phone', e.target.value)} /></Field>
                     <Field label="Location"><Input value={settings.location} onChange={(e) => set('location', e.target.value)} /></Field>
+                  </div>
+                  <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', margin: '18px 0 14px' }} />
+                  <div className="card-title">Social & Review Links</div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginBottom: 12 }}>
+                    Added to the bill (WhatsApp message + invoice page) so customers can follow & review you.
+                  </div>
+                  <Field label="Google Review Link">
+                    <Input value={settings.google_link ?? ''} placeholder="https://g.page/r/…" onChange={(e) => set('google_link', e.target.value)} />
+                  </Field>
+                  <div className="form-row mb16" style={{ marginTop: 12 }}>
+                    <Field label="Instagram Link">
+                      <Input value={settings.instagram_link ?? ''} placeholder="https://instagram.com/…" onChange={(e) => set('instagram_link', e.target.value)} />
+                    </Field>
+                    <Field label="Facebook Link">
+                      <Input value={settings.facebook_link ?? ''} placeholder="https://facebook.com/…" onChange={(e) => set('facebook_link', e.target.value)} />
+                    </Field>
                   </div>
                   <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', margin: '18px 0 14px' }} />
                   <div className="card-title">Feature Toggles</div>

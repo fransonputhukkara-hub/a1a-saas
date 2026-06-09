@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { supabase, SHOP } from '../lib/supabase'
+import { supabase } from '../lib/supabase'
 import type { Invoice } from '../lib/types'
 import { inr, longDate } from '../lib/format'
+import { useShop } from '../lib/ShopContext'
 
 /**
  * Public, no-login invoice view opened from the WhatsApp link.
@@ -11,6 +12,7 @@ import { inr, longDate } from '../lib/format'
  */
 export default function InvoicePublic() {
   const { id } = useParams<{ id: string }>()
+  const { shop } = useShop()
   const [inv, setInv] = useState<Invoice | null>(null)
   const [status, setStatus] = useState<'loading' | 'ok' | 'missing'>('loading')
 
@@ -36,8 +38,8 @@ export default function InvoicePublic() {
       <div style={card}>
         <div style={topBar} />
         <div style={header}>
-          <div style={{ fontFamily: 'Georgia, serif', fontSize: '1.5rem', fontWeight: 700, color: '#f5d98a', letterSpacing: '0.04em' }}>{SHOP.name}</div>
-          <div style={{ fontStyle: 'italic', fontSize: '0.85rem', color: 'rgba(245,217,138,0.75)', marginTop: 4 }}>{SHOP.location} · {SHOP.phone}</div>
+          <div style={{ fontFamily: 'Georgia, serif', fontSize: '1.5rem', fontWeight: 700, color: '#f5d98a', letterSpacing: '0.04em' }}>{shop.name}</div>
+          <div style={{ fontStyle: 'italic', fontSize: '0.85rem', color: 'rgba(245,217,138,0.75)', marginTop: 4 }}>{shop.location} · {shop.phone}</div>
         </div>
 
         <div style={metaBar}>
@@ -95,6 +97,13 @@ export default function InvoicePublic() {
 
         <div style={footer}>
           <div style={{ fontSize: '0.72rem', letterSpacing: '0.12em', color: '#f5d98a', textTransform: 'uppercase' }}>Thank You for Shopping with Us</div>
+          {(shop.google_link || shop.instagram_link || shop.facebook_link) && (
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 14, marginTop: 10, flexWrap: 'wrap' }}>
+              {shop.google_link && <a href={shop.google_link} target="_blank" rel="noopener noreferrer" style={socialLink}>⭐ Review</a>}
+              {shop.instagram_link && <a href={shop.instagram_link} target="_blank" rel="noopener noreferrer" style={socialLink}>📸 Instagram</a>}
+              {shop.facebook_link && <a href={shop.facebook_link} target="_blank" rel="noopener noreferrer" style={socialLink}>👍 Facebook</a>}
+            </div>
+          )}
         </div>
         <div style={botBar} />
       </div>
@@ -122,3 +131,4 @@ const blockLabel: React.CSSProperties = { fontSize: '0.55rem', letterSpacing: '0
 const th: React.CSSProperties = { fontSize: '0.6rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#f5d98a', padding: '10px 12px', textAlign: 'left', fontWeight: 600 }
 const td: React.CSSProperties = { padding: '11px 12px', fontSize: '0.85rem', color: '#2c1810' }
 const footer: React.CSSProperties = { background: '#6b1a1a', padding: '16px 24px', textAlign: 'center' }
+const socialLink: React.CSSProperties = { fontSize: '0.7rem', color: '#f5d98a', textDecoration: 'none', border: '1px solid rgba(201,146,26,0.4)', padding: '4px 10px', borderRadius: 20 }
