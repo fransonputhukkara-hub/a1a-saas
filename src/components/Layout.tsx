@@ -44,7 +44,7 @@ export default function Layout() {
               <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
             </svg>
           </button>
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="topbar-meta" style={{ flex: 1, minWidth: 0 }}>
             <span className="font-serif" style={{ fontSize: '1.05rem', color: 'var(--ink)' }}>
               {meta.title}
             </span>
@@ -54,11 +54,12 @@ export default function Layout() {
           </div>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <button className="btn btn-gold no-print" onClick={() => navigate('/sale')}>
-              ＋ New Bill
+              ＋ <span className="btn-label">New Bill</span>
             </button>
             <div className="avatar">TC</div>
             <button className="btn btn-outline no-print" onClick={() => signOut()}>
-              Sign Out
+              <span className="btn-label">Sign Out</span>
+              <span className="btn-icon-only" aria-hidden="true">⎋</span>
             </button>
           </div>
         </div>

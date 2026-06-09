@@ -152,6 +152,8 @@ body {
   font-size: 0.75rem;
   border-radius: 9px;
 }
+/* Icon-only label fallback shown on small phones (see media queries) */
+.btn-icon-only { display: none; }
 .dt tr.is-editing td {
   background: rgba(201, 168, 76, 0.12);
 }
@@ -378,10 +380,25 @@ select.glass-input { appearance: none; background-image: url("data:image/svg+xml
   .hamburger { display: flex; }
   .g4 { grid-template-columns: 1fr 1fr; }
   .page-content { padding: 14px; }
-  .topbar { padding: 0 14px; }
+  .topbar { padding: 0 12px; gap: 8px; }
+  .topbar .btn { padding: 8px 12px; font-size: 0.78rem; }
+  .topbar-meta { display: none; }
+  .btn-icon-only { display: none; }
   .form-row, .form-row3 { grid-template-columns: 1fr; }
   .item-row, .item-row.no-amt { grid-template-columns: 1fr 64px 64px 28px; }
   .bar-label { width: 70px; }
+  .page-title { font-size: 1.2rem; }
+  .page-header { margin-bottom: 16px; }
+  .modal-card { padding: 16px; border-radius: 14px; }
+}
+
+/* Small phones — collapse button text to icons to save room */
+@media (max-width: 420px) {
+  .btn-label { display: none; }
+  .btn-icon-only { display: inline; }
+  .avatar { display: none; }
+  .g4 { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .topbar .btn { padding: 8px 10px; }
 }
 
 @media print {
