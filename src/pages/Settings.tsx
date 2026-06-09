@@ -1,17 +1,16 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import type { Settings as SettingsRow, Staff } from '../lib/types'
-import { Card, PageHeader, Pill, Field, Input, Select, ToggleRow, Empty } from '../components/ui'
+import type { Settings as SettingsRow } from '../lib/types'
+import { Card, PageHeader, Field, Input, ToggleRow, Empty } from '../components/ui'
 import { useShop } from '../lib/ShopContext'
 
-type Tab = 'shop' | 'invoice' | 'whatsapp' | 'notifications' | 'staff' | 'plan'
+type Tab = 'shop' | 'invoice' | 'whatsapp' | 'notifications' | 'plan'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'shop', label: '🏪 Shop Profile' },
   { id: 'invoice', label: '🧾 Invoice Settings' },
   { id: 'whatsapp', label: '💬 WhatsApp' },
   { id: 'notifications', label: '🔔 Notifications' },
-  { id: 'staff', label: '👥 Staff & Access' },
   { id: 'plan', label: '💳 Plan & Billing' },
 ]
 
@@ -19,9 +18,7 @@ export default function Settings() {
   const { refresh: refreshShop } = useShop()
   const [tab, setTab] = useState<Tab>('shop')
   const [settings, setSettings] = useState<SettingsRow | null>(null)
-  const [staff, setStaff] = useState<Staff[]>([])
   const [msg, setMsg] = useState<string | null>(null)
-  const [staffForm, setStaffForm] = useState({ name: '', role: '', phone: '', access_level: 'view' })
   const [toggles, setToggles] = useState<Record<string, boolean>>({
     waReminders: true, lowStock: true, lostCustomers: true, loyalty: false,
     showLogo: true, showBalance: true, showDelivery: true, duplicateCopy: false,
@@ -30,12 +27,8 @@ export default function Settings() {
   })
 
   async function load() {
-    const [{ data: s }, { data: st }] = await Promise.all([
-      supabase.from('settings').select('*').eq('id', 1).single(),
-      supabase.from('staff').select('*').order('name'),
-    ])
+    const { data: s } = await supabase.from('settings').select('*').eq('id', 1).single()
     setSettings(s as SettingsRow)
-    setStaff((st as Staff[]) ?? [])
   }
   useEffect(() => { load() }, [])
 
@@ -55,20 +48,6 @@ export default function Settings() {
     refreshShop()
     setMsg('Settings saved ✅')
     setTimeout(() => setMsg(null), 2500)
-  }
-
-  async function addStaff() {
-    if (!staffForm.name.trim()) return
-    await supabase.from('staff').insert({
-      name: staffForm.name.trim(), role: staffForm.role.trim() || null,
-      phone: staffForm.phone.trim() || null, access_level: staffForm.access_level,
-    })
-    setStaffForm({ name: '', role: '', phone: '', access_level: 'view' })
-    load()
-  }
-  async function removeStaff(id: string) {
-    await supabase.from('staff').delete().eq('id', id)
-    load()
   }
 
   const set = (k: keyof SettingsRow, v: string) => setSettings((s) => (s ? { ...s, [k]: v } : s))
@@ -178,45 +157,6 @@ export default function Settings() {
                   <ToggleRow label="Daily Sales Summary" on={toggles.nDaily} onChange={tg('nDaily')} />
                   <ToggleRow label="New Customer Alert" on={toggles.nNewCust} onChange={tg('nNewCust')} />
                   <ToggleRow label="Delivery Due Today" on={toggles.nDelivery} onChange={tg('nDelivery')} />
-                </Card>
-              )}
-
-              {tab === 'staff' && (
-                <Card>
-                  <div className="card-title">Staff Members</div>
-                  {staff.length === 0 ? <Empty>No staff added yet.</Empty> : (
-                    <div className="table-wrap mb16">
-                      <table className="dt">
-                        <thead><tr><th>Name</th><th>Role</th><th>Phone</th><th>Access</th><th></th></tr></thead>
-                        <tbody>
-                          {staff.map((s) => (
-                            <tr key={s.id}>
-                              <td><strong>{s.name}</strong></td>
-                              <td>{s.role ?? '—'}</td>
-                              <td>{s.phone ?? '—'}</td>
-                              <td><Pill tone={s.access_level === 'full' ? 'purple' : s.access_level === 'billing' ? 'blue' : 'gray'}>{s.access_level === 'full' ? 'Full Access' : s.access_level === 'billing' ? 'Billing Only' : 'View Only'}</Pill></td>
-                              <td><button className="btn btn-outline" style={{ padding: '4px 10px', fontSize: '0.7rem' }} onClick={() => removeStaff(s.id)}>Remove</button></td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                  <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', margin: '8px 0 14px' }} />
-                  <div className="card-title">Add Staff</div>
-                  <div className="form-row">
-                    <Field label="Name"><Input value={staffForm.name} onChange={(e) => setStaffForm({ ...staffForm, name: e.target.value })} /></Field>
-                    <Field label="Role"><Input value={staffForm.role} placeholder="Master Tailor…" onChange={(e) => setStaffForm({ ...staffForm, role: e.target.value })} /></Field>
-                  </div>
-                  <div className="form-row">
-                    <Field label="Phone"><Input value={staffForm.phone} onChange={(e) => setStaffForm({ ...staffForm, phone: e.target.value })} /></Field>
-                    <Field label="Access Level">
-                      <Select value={staffForm.access_level} onChange={(e) => setStaffForm({ ...staffForm, access_level: e.target.value })}>
-                        <option value="view">View Only</option><option value="billing">Billing Only</option><option value="full">Full Access</option>
-                      </Select>
-                    </Field>
-                  </div>
-                  <button className="btn btn-gold" onClick={addStaff}>＋ Add Staff</button>
                 </Card>
               )}
 
