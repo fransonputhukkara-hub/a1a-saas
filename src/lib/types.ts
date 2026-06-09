@@ -38,6 +38,7 @@ export interface Invoice {
 export interface Purchase {
   id: string
   supplier: string
+  supplier_phone: string | null
   bill_no: string | null
   date: string
   items: LineItem[]
@@ -46,6 +47,13 @@ export interface Purchase {
   tax_amount: number
   payment_mode: string
   status: string
+  created_at: string
+}
+
+export interface Supplier {
+  id: string
+  name: string
+  phone: string | null
   created_at: string
 }
 

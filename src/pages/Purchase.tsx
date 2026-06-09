@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { adjustStock } from '../lib/inventory'
-import type { Purchase as PurchaseRow, LineItem } from '../lib/types'
+import type { Purchase as PurchaseRow, LineItem, Supplier } from '../lib/types'
 import { inr, today, shortDate } from '../lib/format'
 import { Card, PageHeader, Pill, Field, Input, Select, Empty } from '../components/ui'
 
@@ -9,6 +9,9 @@ const blank = (): LineItem => ({ name: '', qty: 1, rate: 0 })
 
 export default function Purchase() {
   const [supplier, setSupplier] = useState('')
+  const [supplierPhone, setSupplierPhone] = useState('')
+  const [suppliers, setSuppliers] = useState<Supplier[]>([])
+  const [showSuggest, setShowSuggest] = useState(false)
   const [billNo, setBillNo] = useState('')
   const [date, setDate] = useState(today())
   const [paymentMode, setPaymentMode] = useState('Credit (Due)')
@@ -34,7 +37,40 @@ export default function Purchase() {
       .limit(8)
       .then(({ data }) => setRecent((data as PurchaseRow[]) ?? []))
   }
-  useEffect(load, [])
+  function loadSuppliers() {
+    supabase
+      .from('suppliers')
+      .select('*')
+      .order('name')
+      .then(({ data }) => setSuppliers((data as Supplier[]) ?? []))
+  }
+  useEffect(() => { load(); loadSuppliers() }, [])
+
+  const supplierSuggestions = suppliers.filter(
+    (s) =>
+      supplier.length > 0 &&
+      (s.name.toLowerCase().includes(supplier.toLowerCase()) || (s.phone ?? '').includes(supplier))
+  )
+
+  function pickSupplier(s: Supplier) {
+    setSupplier(s.name)
+    setSupplierPhone(s.phone ?? '')
+    setShowSuggest(false)
+  }
+
+  // Auto-save a new vendor (or refresh phone for an existing one) so they're
+  // searchable next time. Matched case-insensitively by name.
+  async function upsertSupplier(name: string, phone: string) {
+    const existing = suppliers.find((s) => s.name.toLowerCase() === name.toLowerCase())
+    if (existing) {
+      if (phone && phone !== (existing.phone ?? '')) {
+        await supabase.from('suppliers').update({ phone }).eq('id', existing.id)
+      }
+      return
+    }
+    await supabase.from('suppliers').insert({ name, phone: phone || null })
+    loadSuppliers()
+  }
 
   const subtotal = useMemo(() => items.reduce((s, it) => s + Number(it.qty || 0) * Number(it.rate || 0), 0), [items])
   const taxAmount = useMemo(() => (taxEnabled ? Math.round(subtotal * (Number(taxRate) || 0)) / 100 : 0), [subtotal, taxEnabled, taxRate])
@@ -47,7 +83,7 @@ export default function Purchase() {
   function resetForm() {
     setEditingId(null)
     setOriginalItems([])
-    setSupplier(''); setBillNo(''); setItems([blank()]); setPaymentMode('Credit (Due)'); setDate(today())
+    setSupplier(''); setSupplierPhone(''); setShowSuggest(false); setBillNo(''); setItems([blank()]); setPaymentMode('Credit (Due)'); setDate(today())
     setTaxEnabled(false); setTaxRate(5)
   }
 
@@ -56,6 +92,7 @@ export default function Purchase() {
     setEditingId(p.id)
     setOriginalItems(p.items ?? [])
     setSupplier(p.supplier)
+    setSupplierPhone(p.supplier_phone ?? '')
     setBillNo(p.bill_no ?? '')
     setDate(p.date)
     setPaymentMode(p.payment_mode)
@@ -94,6 +131,7 @@ export default function Purchase() {
       const status = paymentMode.toLowerCase().includes('credit') || paymentMode.toLowerCase().includes('due') ? 'due' : 'paid'
       const payload = {
         supplier: supplier.trim(),
+        supplier_phone: supplierPhone.trim() || null,
         bill_no: billNo.trim() || null,
         date,
         items: clean,
@@ -116,6 +154,8 @@ export default function Purchase() {
         await adjustStock(clean, 1)
         setMsg('Purchase saved and inventory updated ✅')
       }
+      // Remember this vendor for future searches.
+      await upsertSupplier(supplier.trim(), supplierPhone.trim())
       resetForm()
       load()
     } catch (err) {
@@ -143,11 +183,41 @@ export default function Purchase() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Card title="Supplier Details">
             <div className="form-row">
-              <Field label="Supplier Name"><Input value={supplier} onChange={(e) => setSupplier(e.target.value)} /></Field>
-              <Field label="Invoice / Bill No."><Input value={billNo} onChange={(e) => setBillNo(e.target.value)} /></Field>
+              <div className="form-group" style={{ position: 'relative' }}>
+                <label className="form-label">Supplier Name</label>
+                <Input
+                  value={supplier}
+                  placeholder="Search or add vendor…"
+                  onChange={(e) => { setSupplier(e.target.value); setShowSuggest(true) }}
+                  onFocus={() => setShowSuggest(true)}
+                />
+                {showSuggest && supplierSuggestions.length > 0 && (
+                  <div
+                    className="glass-card"
+                    style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 20, marginTop: 4, padding: 6, maxHeight: 220, overflowY: 'auto' }}
+                  >
+                    {supplierSuggestions.slice(0, 6).map((s) => (
+                      <div
+                        key={s.id}
+                        onClick={() => pickSupplier(s)}
+                        style={{ padding: '8px 10px', borderRadius: 8, cursor: 'pointer', fontSize: '0.82rem' }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(0,0,0,0.04)')}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                      >
+                        <strong>{s.name}</strong>
+                        {s.phone && <span style={{ color: 'var(--muted)', marginLeft: 8 }}>{s.phone}</span>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <Field label="Supplier Phone"><Input value={supplierPhone} placeholder="+91…" onChange={(e) => setSupplierPhone(e.target.value)} /></Field>
             </div>
             <div className="form-row">
+              <Field label="Invoice / Bill No."><Input value={billNo} onChange={(e) => setBillNo(e.target.value)} /></Field>
               <Field label="Purchase Date"><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></Field>
+            </div>
+            <div className="form-row">
               <Field label="Payment Mode">
                 <Select value={paymentMode} onChange={(e) => setPaymentMode(e.target.value)}>
                   <option>Credit (Due)</option><option>Cash</option><option>UPI</option><option>Bank Transfer</option>
@@ -230,6 +300,11 @@ export default function Purchase() {
             <button className="btn btn-gold" style={{ width: '100%', marginTop: 14 }} onClick={save} disabled={saving}>
               {saving ? 'Saving…' : editingId ? 'Update & Adjust Stock' : 'Save & Update Stock'}
             </button>
+            {supplier.trim() && !suppliers.some((s) => s.name.toLowerCase() === supplier.trim().toLowerCase()) && (
+              <div style={{ fontSize: '0.68rem', color: 'var(--muted)', marginTop: 8, textAlign: 'center' }}>
+                New vendor “{supplier.trim()}” will be saved for next time
+              </div>
+            )}
           </Card>
         </div>
       </div>
