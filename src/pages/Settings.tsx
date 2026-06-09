@@ -51,6 +51,29 @@ export default function Settings() {
     setTimeout(() => setMsg(null), 2500)
   }
 
+  async function uploadLogo(file: File) {
+    if (!settings) return
+    const ext = (file.name.split('.').pop() || 'png').toLowerCase()
+    const path = `shop-logo-${Date.now()}.${ext}`
+    const { error: upErr } = await supabase.storage.from('logos').upload(path, file, { upsert: true })
+    if (upErr) { setMsg('Logo upload failed: ' + upErr.message); return }
+    const { data } = supabase.storage.from('logos').getPublicUrl(path)
+    const url = data.publicUrl
+    setSettings((s) => (s ? { ...s, logo_url: url } : s))
+    await supabase.from('settings').update({ logo_url: url }).eq('id', 1)
+    refreshShop()
+    setMsg('Logo updated ✅')
+    setTimeout(() => setMsg(null), 2500)
+  }
+
+  async function removeLogo() {
+    setSettings((s) => (s ? { ...s, logo_url: null } : s))
+    await supabase.from('settings').update({ logo_url: null }).eq('id', 1)
+    refreshShop()
+    setMsg('Logo removed')
+    setTimeout(() => setMsg(null), 2500)
+  }
+
   const set = (k: keyof SettingsRow, v: string) => setSettings((s) => (s ? { ...s, [k]: v } : s))
   const tg = (k: string) => (v: boolean) => setToggles((t) => ({ ...t, [k]: v }))
 
@@ -73,11 +96,23 @@ export default function Settings() {
             <>
               {tab === 'shop' && (
                 <Card>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 20, paddingBottom: 18, borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
-                    <div style={{ width: 64, height: 64, borderRadius: 16, background: 'var(--ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Playfair Display',serif", fontSize: '1.2rem', color: 'var(--gold)' }}>ST</div>
-                    <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 20, paddingBottom: 18, borderBottom: '1px solid rgba(0,0,0,0.08)', flexWrap: 'wrap' }}>
+                    {settings.logo_url ? (
+                      <img src={settings.logo_url} alt="logo" style={{ width: 64, height: 64, borderRadius: 16, objectFit: 'cover', background: '#fff', border: '1px solid rgba(0,0,0,0.1)' }} />
+                    ) : (
+                      <div style={{ width: 64, height: 64, borderRadius: 16, background: 'var(--ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Playfair Display',serif", fontSize: '1.2rem', color: 'var(--gold)' }}>
+                        {settings.shop_name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase()}
+                      </div>
+                    )}
+                    <div style={{ flex: 1, minWidth: 160 }}>
                       <div className="font-serif" style={{ fontSize: '1.1rem' }}>{settings.shop_name}</div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: 2 }}>Single-shop · Active</div>
+                      <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+                        <label className="btn btn-outline btn-sm" style={{ cursor: 'pointer' }}>
+                          {settings.logo_url ? 'Change Logo' : '⬆ Upload Logo'}
+                          <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadLogo(f); e.target.value = '' }} />
+                        </label>
+                        {settings.logo_url && <button className="btn btn-outline btn-sm btn-danger" onClick={removeLogo}>Remove</button>}
+                      </div>
                     </div>
                   </div>
                   <div className="form-row mb16">

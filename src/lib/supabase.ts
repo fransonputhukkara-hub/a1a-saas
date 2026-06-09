@@ -27,8 +27,8 @@ export const supabase = createClient(
 
 /** Shop constants (single-shop app). */
 export const SHOP = {
-  name: "St. Thomas Men's Wear",
+  name: 'A1 Sanskriti Silks',
   location: 'Thrissur, Kerala',
-  owner: 'Thomas Chetta',
+  owner: '',
   phone: '+91 88910 74715',
 }

@@ -134,4 +134,5 @@ export interface Settings {
   facebook_link: string | null
   google_link: string | null
   website_link: string | null
+  logo_url: string | null
 }

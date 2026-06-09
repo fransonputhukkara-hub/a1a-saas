@@ -11,6 +11,7 @@ export interface ShopInfo {
   facebook_link: string | null
   google_link: string | null
   website_link: string | null
+  logo_url: string | null
 }
 
 const defaults: ShopInfo = {
@@ -23,6 +24,7 @@ const defaults: ShopInfo = {
   facebook_link: null,
   google_link: null,
   website_link: null,
+  logo_url: null,
 }
 
 const ShopContext = createContext<{ shop: ShopInfo; refresh: () => void }>({
@@ -49,6 +51,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         facebook_link: row.facebook_link ?? null,
         google_link: row.google_link ?? null,
         website_link: row.website_link ?? null,
+        logo_url: row.logo_url ?? null,
       })
     })
   }
@@ -63,3 +66,23 @@ export function ShopProvider({ children }: { children: ReactNode }) {
 }
 
 export const useShop = () => useContext(ShopContext)
+
+/** Shop logo image if uploaded, otherwise initials in a branded tile. */
+export function ShopLogo({ size = 64, radius = 16 }: { size?: number; radius?: number }) {
+  const { shop } = useShop()
+  if (shop.logo_url) {
+    return (
+      <img
+        src={shop.logo_url}
+        alt={shop.name}
+        style={{ width: size, height: size, borderRadius: radius, objectFit: 'cover', background: '#fff' }}
+      />
+    )
+  }
+  const initials = shop.name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase() || 'SH'
+  return (
+    <div style={{ width: size, height: size, borderRadius: radius, background: 'var(--navy, #1a1a2e)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold, #c9a84c)', fontFamily: "'Playfair Display', serif", fontSize: size * 0.34, fontWeight: 700 }}>
+      {initials}
+    </div>
+  )
+}

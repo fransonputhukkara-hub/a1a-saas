@@ -1,7 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/AuthContext'
-import { supabase, SHOP } from '../lib/supabase'
+import { supabase } from '../lib/supabase'
+import { useShop, ShopLogo } from '../lib/ShopContext'
 
 /**
  * Landing page for the password-reset email link. Supabase establishes a
@@ -10,6 +11,7 @@ import { supabase, SHOP } from '../lib/supabase'
  */
 export default function ResetPassword() {
   const { updatePassword } = useAuth()
+  const { shop } = useShop()
   const navigate = useNavigate()
   const [ready, setReady] = useState(false)
   const [password, setPassword] = useState('')
@@ -48,10 +50,8 @@ export default function ResetPassword() {
     <div className="min-h-screen flex items-center justify-center p-5">
       <div className="glass-card w-full max-w-md p-8 sm:p-10 relative">
         <div className="text-center mb-8">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl" style={{ background: 'var(--navy)', boxShadow: '0 8px 24px rgba(26,26,46,0.3)' }}>
-            <span className="font-serif text-2xl" style={{ color: 'var(--gold)' }}>St</span>
-          </div>
-          <h1 className="font-serif text-2xl" style={{ color: 'var(--ink)' }}>{SHOP.name}</h1>
+          <div className="mx-auto mb-4 flex justify-center"><ShopLogo size={64} /></div>
+          <h1 className="font-serif text-2xl" style={{ color: 'var(--ink)' }}>{shop.name}</h1>
           <p className="mt-1 text-sm" style={{ color: 'var(--muted)' }}>Set a New Password</p>
         </div>
 

@@ -1,12 +1,13 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../lib/AuthContext'
-import { SHOP } from '../lib/supabase'
+import { useShop, ShopLogo } from '../lib/ShopContext'
 
 type Mode = 'signin' | 'signup' | 'forgot'
 
 export default function Login() {
   const { signIn, signUp, sendReset } = useAuth()
+  const { shop } = useShop()
   const navigate = useNavigate()
   const location = useLocation()
   const from = (location.state as { from?: string })?.from ?? '/'
@@ -76,13 +77,10 @@ export default function Login() {
 
       <div className="glass-card w-full max-w-md p-8 sm:p-10 relative">
         <div className="text-center mb-8">
-          <div
-            className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl"
-            style={{ background: 'var(--navy)', boxShadow: '0 8px 24px rgba(26,26,46,0.3)' }}
-          >
-            <span className="font-serif text-2xl" style={{ color: 'var(--gold)' }}>St</span>
+          <div className="mx-auto mb-4 flex justify-center">
+            <ShopLogo size={64} />
           </div>
-          <h1 className="font-serif text-2xl" style={{ color: 'var(--ink)' }}>{SHOP.name}</h1>
+          <h1 className="font-serif text-2xl" style={{ color: 'var(--ink)' }}>{shop.name}</h1>
           <p className="mt-1 text-sm" style={{ color: 'var(--muted)' }}>{titles[mode]} · Business Suite</p>
         </div>
 
