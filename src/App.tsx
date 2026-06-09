@@ -6,6 +6,7 @@ import ErrorBoundary from './components/ErrorBoundary'
 import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/Layout'
 import Login from './pages/Login'
+import ResetPassword from './pages/ResetPassword'
 import InvoicePublic from './pages/InvoicePublic'
 import Dashboard from './pages/Dashboard'
 import Sale from './pages/Sale'
@@ -55,6 +56,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/i/:id" element={<InvoicePublic />} />
           <Route
             element={
