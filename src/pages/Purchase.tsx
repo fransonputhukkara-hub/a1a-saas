@@ -23,6 +23,8 @@ export default function Purchase() {
   // originalItems is the snapshot of what was saved, so stock only moves by the delta.
   const [editingId, setEditingId] = useState<string | null>(null)
   const [originalItems, setOriginalItems] = useState<LineItem[]>([])
+  const [viewing, setViewing] = useState<PurchaseRow | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   function load() {
     supabase
@@ -61,6 +63,25 @@ export default function Purchase() {
     setTaxRate(Number(p.tax_rate) > 0 ? Number(p.tax_rate) : 5)
     setItems(p.items?.length ? p.items.map((it) => ({ ...it })) : [blank()])
     window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  async function deletePurchase(p: PurchaseRow) {
+    if (!window.confirm(`Delete this purchase from ${p.supplier}? Its stock will be removed from inventory.`)) return
+    setError(null); setMsg(null)
+    setDeletingId(p.id)
+    try {
+      const { error: e } = await supabase.from('purchases').delete().eq('id', p.id)
+      if (e) throw e
+      // Reverse the stock this purchase had added.
+      await adjustStock(p.items ?? [], -1)
+      if (editingId === p.id) resetForm()
+      setMsg('Purchase deleted and stock reversed ✅')
+      load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete purchase.')
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   async function save() {
@@ -182,7 +203,15 @@ export default function Purchase() {
                         <td>{p.bill_no ?? '—'}</td>
                         <td className="r">{inr(p.total)}</td>
                         <td><Pill tone={p.status === 'paid' ? 'green' : 'gold'}>{p.status === 'paid' ? 'Paid' : 'Due'}</Pill></td>
-                        <td className="r"><button className="btn btn-outline btn-sm" onClick={() => startEdit(p)}>Edit</button></td>
+                        <td className="r">
+                          <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                            <button className="btn btn-outline btn-sm" onClick={() => setViewing(p)}>View</button>
+                            <button className="btn btn-outline btn-sm" onClick={() => startEdit(p)}>Edit</button>
+                            <button className="btn btn-outline btn-sm btn-danger" onClick={() => deletePurchase(p)} disabled={deletingId === p.id}>
+                              {deletingId === p.id ? '…' : 'Delete'}
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -204,6 +233,47 @@ export default function Purchase() {
           </Card>
         </div>
       </div>
+
+      {viewing && (
+        <div className="modal-overlay" onClick={() => setViewing(null)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{viewing.supplier}</h3>
+                <div style={{ fontSize: '0.78rem', color: 'var(--muted)', marginTop: 2 }}>
+                  {shortDate(viewing.date)} · Bill {viewing.bill_no ?? '—'} · {viewing.payment_mode}
+                </div>
+              </div>
+              <button className="del-btn" onClick={() => setViewing(null)}>✕</button>
+            </div>
+            <div className="table-wrap">
+              <table className="dt">
+                <thead><tr><th>Item</th><th className="r">Qty</th><th className="r">Rate</th><th className="r">Amount</th></tr></thead>
+                <tbody>
+                  {(viewing.items ?? []).map((it, i) => (
+                    <tr key={i}>
+                      <td>{it.name}</td>
+                      <td className="r">{it.qty}</td>
+                      <td className="r">{inr(it.rate)}</td>
+                      <td className="r">{inr(Number(it.qty) * Number(it.rate))}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div style={{ marginTop: 12 }}>
+              {Number(viewing.tax_amount) > 0 && (
+                <div className="sum-row"><span>Tax ({Number(viewing.tax_rate)}%)</span><span>{inr(viewing.tax_amount)}</span></div>
+              )}
+              <div className="sum-row total"><span>Total</span><span>{inr(viewing.total)}</span></div>
+            </div>
+            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+              <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => { startEdit(viewing); setViewing(null) }}>Edit</button>
+              <button className="btn btn-gold" style={{ flex: 1 }} onClick={() => setViewing(null)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
