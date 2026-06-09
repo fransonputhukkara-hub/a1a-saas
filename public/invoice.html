@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>A1 Sanskriti Silks – Invoice</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Noto+Sans+Malayalam:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --maroon:    #6b1a1a;
+  --maroon-d:  #4a0f0f;
+  --maroon-l:  #8b2222;
+  --gold:      #c9921a;
+  --gold-l:    #e8b84b;
+  --gold-ll:   #f5d98a;
+  --cream:     #fdf6e8;
+  --cream-d:   #f5ead0;
+  --ivory:     #fffdf7;
+  --text:      #2c1810;
+  --muted:     #7a5c4a;
+  --border:    #d4a853;
+  --green:     #1a5e3a;
+  --shadow:    0 8px 40px rgba(107,26,26,0.15);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+
+body {
+  font-family: 'EB Garamond', Georgia, serif;
+  background: var(--maroon-d);
+  background-image:
+    repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(201,146,26,0.04) 20px, rgba(201,146,26,0.04) 21px),
+    repeating-linear-gradient(-45deg, transparent, transparent 20px, rgba(201,146,26,0.04) 20px, rgba(201,146,26,0.04) 21px);
+  min-height: 100vh;
+  padding: 28px 12px 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── Greeting Banner ── */
+.greeting-banner {
+  width: 100%;
+  max-width: 680px;
+  background: linear-gradient(135deg, var(--gold) 0%, #a87520 50%, var(--gold) 100%);
+  border-radius: 14px 14px 0 0;
+  padding: 14px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  animation: fadeDown 0.6s ease both;
+}
+.greeting-banner::before,
+.greeting-banner::after {
+  content: '❋';
+  position: absolute;
+  font-size: 2.5rem;
+  color: rgba(255,255,255,0.18);
+  top: 50%; transform: translateY(-50%);
+}
+.greeting-banner::before { left: 16px; }
+.greeting-banner::after  { right: 16px; }
+
+.greeting-text {
+  font-family: 'Cinzel', serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  color: var(--maroon-d);
+  text-transform: uppercase;
+}
+.greeting-msg {
+  font-family: 'EB Garamond', serif;
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--ivory);
+  margin-top: 3px;
+  text-shadow: 0 1px 4px rgba(74,15,15,0.4);
+}
+
+/* ── Main Card ── */
+.invoice-wrap {
+  width: 100%;
+  max-width: 680px;
+  background: var(--ivory);
+  box-shadow: var(--shadow);
+  animation: fadeUp 0.7s ease 0.1s both;
+  position: relative;
+}
+
+/* temple border top */
+.temple-border {
+  height: 14px;
+  background: var(--maroon);
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0px, transparent 18px,
+    var(--gold) 18px, var(--gold) 20px,
+    transparent 20px, transparent 38px,
+    var(--gold-l) 38px, var(--gold-l) 40px
+  );
+}
+
+/* ── Header ── */
+.invoice-header {
+  background: var(--maroon);
+  padding: 28px 28px 22px;
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+}
+.header-ornament {
+  font-size: 1.4rem;
+  color: var(--gold-l);
+  letter-spacing: 0.3em;
+  margin-bottom: 6px;
+  opacity: 0.8;
+}
+.shop-name {
+  font-family: 'Cinzel', serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--gold-l);
+  letter-spacing: 0.06em;
+  line-height: 1.15;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.4);
+}
+.shop-subtitle {
+  font-family: 'EB Garamond', serif;
+  font-style: italic;
+  font-size: 0.95rem;
+  color: rgba(245,217,138,0.75);
+  margin-top: 5px;
+  letter-spacing: 0.08em;
+}
+.header-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 10px;
+}
+.header-divider span { flex:1; height:1px; background: var(--gold); opacity:0.4; }
+.header-divider em { font-style:normal; color:var(--gold-l); font-size:1rem; }
+
+.shop-contact-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.contact-chip {
+  font-size: 0.72rem;
+  color: rgba(245,217,138,0.7);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'EB Garamond', serif;
+}
+
+/* social row */
+.social-row {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 12px;
+}
+.social-link {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.68rem;
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.08em;
+  color: var(--gold-ll);
+  text-decoration: none;
+  border: 1px solid rgba(201,146,26,0.35);
+  padding: 4px 10px;
+  border-radius: 20px;
+  transition: background 0.2s;
+}
+.social-link:hover { background: rgba(201,146,26,0.15); }
+
+/* ── Invoice Meta Bar ── */
+.meta-bar {
+  background: var(--maroon-l);
+  padding: 10px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.meta-item { text-align: center; }
+.meta-label {
+  font-family: 'Cinzel', serif;
+  font-size: 0.55rem;
+  letter-spacing: 0.14em;
+  color: rgba(245,217,138,0.6);
+  text-transform: uppercase;
+}
+.meta-value {
+  font-family: 'Cinzel', serif;
+  font-size: 0.9rem;
+  color: var(--gold-ll);
+  margin-top: 2px;
+}
+
+/* ── Body ── */
+.invoice-body { padding: 0 28px 24px; }
+
+/* customer + delivery row */
+.info-row {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--cream-d);
+}
+.info-block {
+  flex: 1;
+  padding: 20px 16px;
+  border-right: 1px solid var(--cream-d);
+}
+.info-block:last-child { border-right: none; }
+
+.block-label {
+  font-family: 'Cinzel', serif;
+  font-size: 0.55rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.block-label::after { content:''; flex:1; height:1px; background: var(--gold); opacity:0.25; }
+.customer-name {
+  font-family: 'Cinzel', serif;
+  font-size: 1.05rem;
+  color: var(--maroon-d);
+}
+.info-detail {
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.7;
+  margin-top: 4px;
+}
+.info-tag {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 0.65rem;
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.06em;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+}
+
+/* ── Items ── */
+.items-section { padding: 20px 0 0; }
+.section-heading {
+  font-family: 'Cinzel', serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--maroon);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-heading::before,
+.section-heading::after { content:''; flex:1; height:1px; background:var(--maroon); opacity:0.2; }
+
+table { width:100%; border-collapse:collapse; }
+thead tr {
+  background: var(--maroon);
+}
+thead th {
+  font-family: 'Cinzel', serif;
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-ll);
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+}
+thead th.r { text-align:right; }
+tbody tr { border-bottom: 1px solid var(--cream-d); }
+tbody tr:nth-child(even) { background: rgba(212,168,83,0.05); }
+tbody td {
+  padding: 13px 12px;
+  font-size: 0.85rem;
+  color: var(--text);
+  vertical-align: top;
+}
+tbody td.r { text-align:right; }
+.item-name { font-weight: 500; font-size: 0.9rem; }
+.item-sub {
+  font-size: 0.73rem;
+  color: var(--muted);
+  font-style: italic;
+  margin-top: 2px;
+}
+.item-badge {
+  display: inline-block;
+  font-size: 0.58rem;
+  font-family: 'Cinzel', serif;
+  padding: 2px 7px;
+  border-radius: 10px;
+  margin-top: 4px;
+  border: 1px solid;
+}
+.badge-silk   { color: var(--maroon); border-color: var(--maroon); background: rgba(107,26,26,0.06); }
+.badge-cotton { color: var(--green);  border-color: var(--green);  background: rgba(26,94,58,0.06);  }
+.badge-zari   { color: var(--gold);   border-color: var(--gold);   background: rgba(201,146,26,0.08); }
+
+/* ── Totals ── */
+.totals-wrap {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 0 0;
+  border-top: 2px solid var(--maroon);
+  margin-top: 4px;
+}
+.totals-box { width: 280px; }
+.t-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  color: var(--muted);
+  padding: 5px 0;
+  border-bottom: 1px dashed rgba(212,168,83,0.3);
+}
+.t-row:last-of-type { border-bottom: none; }
+.t-row.grand {
+  font-family: 'Cinzel', serif;
+  font-size: 1rem;
+  color: var(--maroon-d);
+  font-weight: 700;
+  padding: 10px 0 6px;
+  border-top: 2px solid var(--maroon);
+  margin-top: 6px;
+}
+.t-row.paid  { color: var(--green); }
+.t-row.bal   { color: var(--maroon); font-weight: 600; font-size: 0.9rem; }
+
+/* ── Note ── */
+.note-section {
+  background: var(--cream-d);
+  border-left: 4px solid var(--gold);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 16px;
+  margin: 20px 0 0;
+  font-style: italic;
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* ── Footer ── */
+.invoice-footer {
+  background: var(--maroon);
+  padding: 18px 28px 14px;
+  text-align: center;
+}
+.footer-ornament { color: var(--gold-l); font-size: 1rem; letter-spacing: 0.4em; opacity: 0.7; }
+.footer-thank {
+  font-family: 'Cinzel', serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  color: var(--gold-ll);
+  margin: 8px 0 4px;
+  text-transform: uppercase;
+}
+.footer-msg {
+  font-style: italic;
+  font-size: 0.8rem;
+  color: rgba(245,217,138,0.6);
+}
+.footer-brand {
+  margin-top: 10px;
+  font-size: 0.62rem;
+  color: rgba(245,217,138,0.35);
+  letter-spacing: 0.1em;
+}
+
+/* temple border bottom */
+.temple-border-b {
+  height: 14px;
+  background: var(--maroon);
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0px, transparent 18px,
+    var(--gold) 18px, var(--gold) 20px,
+    transparent 20px, transparent 38px,
+    var(--gold-l) 38px, var(--gold-l) 40px
+  );
+  border-radius: 0 0 8px 8px;
+}
+
+/* ── Action Buttons ── */
+.actions {
+  width: 100%;
+  max-width: 680px;
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+.btn {
+  flex:1;
+  min-width: 130px;
+  padding: 13px 16px;
+  border-radius: 10px;
+  font-family: 'Cinzel', serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  transition: transform 0.15s, opacity 0.15s;
+}
+.btn:active { transform: scale(0.97); opacity: 0.9; }
+.btn-wa   { background: #25D366; color: #fff; box-shadow: 0 4px 16px rgba(37,211,102,0.3); }
+.btn-print{ background: var(--maroon); color: var(--gold-ll); box-shadow: 0 4px 16px rgba(107,26,26,0.35); }
+.btn-pdf  { background: var(--cream); color: var(--maroon); border: 1.5px solid var(--gold); }
+
+/* ── Animations ── */
+@keyframes fadeDown {
+  from { opacity:0; transform: translateY(-16px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+@keyframes fadeUp {
+  from { opacity:0; transform: translateY(20px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+/* ── Mobile ── */
+@media (max-width:520px) {
+  body { padding: 16px 8px 48px; }
+  .shop-name { font-size: 1.45rem; }
+  .invoice-header { padding: 22px 18px 18px; }
+  .meta-bar { padding: 10px 18px; gap:12px; justify-content: space-around; }
+  .invoice-body { padding: 0 16px 20px; }
+  .info-row { flex-direction: column; }
+  .info-block { border-right: none; border-bottom: 1px solid var(--cream-d); padding: 14px 12px; }
+  .info-block:last-child { border-bottom: none; }
+  thead th, tbody td { padding: 9px 8px; font-size: 0.78rem; }
+  .item-name { font-size: 0.82rem; }
+  .totals-box { width: 100%; }
+  .totals-wrap { padding: 12px 0 0; }
+  .actions { gap: 8px; }
+  .btn { font-size: 0.65rem; padding: 11px 10px; }
+  .greeting-msg { font-size: 0.92rem; }
+}
+
+@media print {
+  body { background: white; padding: 0; }
+  .actions, .greeting-banner { display: none; }
+  .invoice-wrap { box-shadow: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- Greeting Banner -->
+<div class="greeting-banner">
+  <div class="greeting-text">A Special Message from A1 Sanskriti Silks</div>
+  <div class="greeting-msg">
+    "Every saree tells a story — thank you for letting us be part of yours." 🌸
+  </div>
+</div>
+
+<!-- Invoice Wrap -->
+<div class="invoice-wrap">
+
+  <!-- Temple Top Border -->
+  <div class="temple-border"></div>
+
+  <!-- Header -->
+  <div class="invoice-header">
+    <div class="header-ornament">✦ ꩜ ✦</div>
+    <div class="shop-name">A1 Sanskriti Silks</div>
+    <div class="shop-subtitle">Handloom · Pure Silks · Heritage Weaves · Bridal Collection</div>
+
+    <div class="header-divider">
+      <span></span><em>❖</em><span></span>
+    </div>
+
+    <div class="shop-contact-row">
+      <div class="contact-chip">
+        <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        MG Road, Thrissur, Kerala
+      </div>
+      <div class="contact-chip">
+        <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.07 9.8 19.79 19.79 0 011.02 1.18 2 2 0 013 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>
+        +91 88910 74715
+      </div>
+      <div class="contact-chip">
+        <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>
+        info@a1sanskriti.com
+      </div>
+    </div>
+
+    <!-- Social Links -->
+    <div class="social-row">
+      <a class="social-link" href="https://maps.google.com/?cid=1234567890123456789" target="_blank">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#e8b84b"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#e8b84b"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#e8b84b"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#e8b84b"/></svg>
+        Google Review ⭐
+      </a>
+      <a class="social-link" href="https://www.instagram.com/a1sanskritisilks/" target="_blank">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+        @a1sanskritisilks
+      </a>
+      <a class="social-link" href="https://www.facebook.com/a1sanskritisilks" target="_blank">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" fill="#e8b84b"/></svg>
+        /a1sanskritisilks
+      </a>
+    </div>
+  </div>
+
+  <!-- Invoice Meta -->
+  <div class="meta-bar">
+    <div class="meta-item">
+      <div class="meta-label">Invoice No.</div>
+      <div class="meta-value">#SS-2025-0312</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Date</div>
+      <div class="meta-value">07 June 2025</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">GST No.</div>
+      <div class="meta-value">32AABCA1234A1Z5</div>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="invoice-body">
+
+    <!-- Customer + Delivery -->
+    <div class="info-row">
+      <div class="info-block">
+        <div class="block-label">Billed To</div>
+        <div class="customer-name">Meenakshi Rajan</div>
+        <div class="info-detail">
+          Puthur, Thrissur – 680 551<br/>
+          +91 94470 98765<br/>
+          meenakshi.rajan@gmail.com
+        </div>
+        <div class="info-tag">Loyal Customer ✦ Since 2019</div>
+      </div>
+      <div class="info-block">
+        <div class="block-label">Order Info</div>
+        <div class="customer-name" style="font-size:0.92rem;">Bridal Collection Order</div>
+        <div class="info-detail">
+          Order Date: 01 June 2025<br/>
+          Delivery: 20 June 2025<br/>
+          Occasion: Wedding — 25 June 2025
+        </div>
+        <div class="info-tag" style="color:var(--green);border-color:var(--green);">✓ Order Confirmed</div>
+      </div>
+    </div>
+
+    <!-- Items -->
+    <div class="items-section">
+      <div class="section-heading">Order Items</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Item Description</th>
+            <th class="r">Qty</th>
+            <th class="r">Rate</th>
+            <th class="r">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div class="item-name">Kanjivaram Silk Saree – Bridal Red</div>
+              <div class="item-sub">Pure Mulberry Silk, Zari Border, 6.3 metres</div>
+              <span class="item-badge badge-silk">Pure Silk</span>
+              <span class="item-badge badge-zari">Zari Work</span>
+            </td>
+            <td class="r">1</td>
+            <td class="r">₹18,500</td>
+            <td class="r">₹18,500</td>
+          </tr>
+          <tr>
+            <td>
+              <div class="item-name">Kasavu Set Saree – Off White & Gold</div>
+              <div class="item-sub">Kerala Handloom, Double Kasavu Border</div>
+              <span class="item-badge badge-cotton">Handloom</span>
+            </td>
+            <td class="r">2</td>
+            <td class="r">₹4,200</td>
+            <td class="r">₹8,400</td>
+          </tr>
+          <tr>
+            <td>
+              <div class="item-name">Banarasi Silk Saree – Royal Blue</div>
+              <div class="item-sub">Kadwa Weave, Meenakari Pallu, Brocade Work</div>
+              <span class="item-badge badge-silk">Pure Silk</span>
+              <span class="item-badge badge-zari">Brocade</span>
+            </td>
+            <td class="r">1</td>
+            <td class="r">₹12,000</td>
+            <td class="r">₹12,000</td>
+          </tr>
+          <tr>
+            <td>
+              <div class="item-name">Blouse Stitching (Silk)</div>
+              <div class="item-sub">3 pieces, Designer Back Neck, Zari Lace</div>
+              <span class="item-badge badge-zari">Tailoring</span>
+            </td>
+            <td class="r">3</td>
+            <td class="r">₹1,200</td>
+            <td class="r">₹3,600</td>
+          </tr>
+          <tr>
+            <td>
+              <div class="item-name">Saree Fall & Pico (per saree)</div>
+              <div class="item-sub">Applied to all 4 sarees</div>
+              <span class="item-badge badge-cotton">Finishing</span>
+            </td>
+            <td class="r">4</td>
+            <td class="r">₹200</td>
+            <td class="r">₹800</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Totals -->
+      <div class="totals-wrap">
+        <div class="totals-box">
+          <div class="t-row"><span>Subtotal</span><span>₹43,300</span></div>
+          <div class="t-row"><span>GST (5% on Silk)</span><span>₹1,540</span></div>
+          <div class="t-row"><span>Festive Discount</span><span style="color:var(--green)">– ₹2,000</span></div>
+          <div class="t-row grand"><span>Grand Total</span><span>₹42,840</span></div>
+          <div class="t-row paid"><span>Advance Paid</span><span>₹15,000</span></div>
+          <div class="t-row bal"><span>Balance Due</span><span>₹27,840</span></div>
+        </div>
+      </div>
+
+      <!-- Note -->
+      <div class="note-section">
+        <strong style="font-style:normal;color:var(--maroon);font-family:'Cinzel',serif;font-size:0.7rem;">Note:</strong>
+        Kindly bring this invoice when collecting your order. Balance payment to be settled before delivery.
+        Items once sold cannot be returned. Stitching charges are non-refundable.
+        For queries, WhatsApp us at +91 88910 74715.
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="invoice-footer">
+    <div class="footer-ornament">✦ ❖ ✦</div>
+    <div class="footer-thank">Thank You for Shopping with Us</div>
+    <div class="footer-msg">
+      "Dressed in tradition, woven with love — we wish you a beautiful celebration." 🌺
+    </div>
+    <div class="footer-brand" style="margin-top:12px;color:rgba(245,217,138,0.4);font-size:0.6rem;letter-spacing:0.1em;">
+      Powered by StitchBill · stitchbill.app
+    </div>
+  </div>
+
+  <!-- Temple Bottom Border -->
+  <div class="temple-border-b"></div>
+
+</div>
+
+<!-- Action Buttons -->
+<div class="actions">
+  <button class="btn btn-wa" onclick="shareWhatsApp()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    WhatsApp
+  </button>
+  <button class="btn btn-print" onclick="window.print()">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    Print
+  </button>
+  <button class="btn btn-pdf" onclick="alert('PDF export available in A1 Sanskriti billing portal')">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Save PDF
+  </button>
+</div>
+
+<script>
+function shareWhatsApp() {
+  const msg = encodeURIComponent(
+    `🌸 *A1 Sanskriti Silks*\n` +
+    `_Handloom · Pure Silks · Heritage Weaves_\n\n` +
+    `*Invoice #SS-2025-0312*\n` +
+    `Customer: Meenakshi Rajan\n` +
+    `Date: 07 June 2025\n\n` +
+    `Grand Total : ₹42,840\n` +
+    `Advance Paid: ₹15,000\n` +
+    `*Balance Due : ₹27,840*\n\n` +
+    `Delivery by: 20 June 2025\n\n` +
+    `_"Every saree tells a story — thank you for letting us be part of yours." 🌺_\n\n` +
+    `📍 MG Road, Thrissur\n` +
+    `📞 +91 88910 74715`
+  );
+  window.open(`https://wa.me/?text=${msg}`, '_blank');
+}
+</script>
+</body>
+</html>

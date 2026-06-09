@@ -42,6 +42,8 @@ export interface Purchase {
   date: string
   items: LineItem[]
   total: number
+  tax_rate: number
+  tax_amount: number
   payment_mode: string
   status: string
   created_at: string

@@ -12,6 +12,8 @@ export default function Purchase() {
   const [billNo, setBillNo] = useState('')
   const [date, setDate] = useState(today())
   const [paymentMode, setPaymentMode] = useState('Credit (Due)')
+  const [taxEnabled, setTaxEnabled] = useState(false)
+  const [taxRate, setTaxRate] = useState(5)
   const [items, setItems] = useState<LineItem[]>([blank()])
   const [recent, setRecent] = useState<PurchaseRow[]>([])
   const [saving, setSaving] = useState(false)
@@ -33,6 +35,8 @@ export default function Purchase() {
   useEffect(load, [])
 
   const subtotal = useMemo(() => items.reduce((s, it) => s + Number(it.qty || 0) * Number(it.rate || 0), 0), [items])
+  const taxAmount = useMemo(() => (taxEnabled ? Math.round(subtotal * (Number(taxRate) || 0)) / 100 : 0), [subtotal, taxEnabled, taxRate])
+  const grandTotal = subtotal + taxAmount
 
   function setItem(idx: number, patch: Partial<LineItem>) {
     setItems((arr) => arr.map((it, i) => (i === idx ? { ...it, ...patch } : it)))
@@ -42,6 +46,7 @@ export default function Purchase() {
     setEditingId(null)
     setOriginalItems([])
     setSupplier(''); setBillNo(''); setItems([blank()]); setPaymentMode('Credit (Due)'); setDate(today())
+    setTaxEnabled(false); setTaxRate(5)
   }
 
   function startEdit(p: PurchaseRow) {
@@ -52,6 +57,8 @@ export default function Purchase() {
     setBillNo(p.bill_no ?? '')
     setDate(p.date)
     setPaymentMode(p.payment_mode)
+    setTaxEnabled(Number(p.tax_rate) > 0)
+    setTaxRate(Number(p.tax_rate) > 0 ? Number(p.tax_rate) : 5)
     setItems(p.items?.length ? p.items.map((it) => ({ ...it })) : [blank()])
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -69,7 +76,9 @@ export default function Purchase() {
         bill_no: billNo.trim() || null,
         date,
         items: clean,
-        total: subtotal,
+        total: grandTotal,
+        tax_rate: taxEnabled ? Number(taxRate) || 0 : 0,
+        tax_amount: taxAmount,
         payment_mode: paymentMode,
         status,
       }
@@ -143,6 +152,19 @@ export default function Purchase() {
               ))}
               <button className="add-item-btn" onClick={() => setItems((a) => [...a, blank()])}>＋ Add Item</button>
             </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(0,0,0,0.06)', flexWrap: 'wrap' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer' }}>
+                <input type="checkbox" checked={taxEnabled} onChange={(e) => setTaxEnabled(e.target.checked)} />
+                Add Tax (GST)
+              </label>
+              {taxEnabled && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Input type="number" min={0} step={0.5} value={taxRate} onChange={(e) => setTaxRate(Number(e.target.value))} style={{ width: 80 }} />
+                  <span style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>% tax</span>
+                </div>
+              )}
+            </div>
           </Card>
 
           <Card title="Recent Purchases">
@@ -173,7 +195,9 @@ export default function Purchase() {
         <div>
           <Card title="Purchase Summary" sticky>
             <div className="sum-row"><span>Items</span><span>{items.filter((i) => i.name.trim()).length}</span></div>
-            <div className="sum-row total"><span>Grand Total</span><span>{inr(subtotal)}</span></div>
+            <div className="sum-row"><span>Subtotal</span><span>{inr(subtotal)}</span></div>
+            {taxEnabled && <div className="sum-row"><span>Tax ({Number(taxRate) || 0}%)</span><span>{inr(taxAmount)}</span></div>}
+            <div className="sum-row total"><span>Grand Total</span><span>{inr(grandTotal)}</span></div>
             <button className="btn btn-gold" style={{ width: '100%', marginTop: 14 }} onClick={save} disabled={saving}>
               {saving ? 'Saving…' : editingId ? 'Update & Adjust Stock' : 'Save & Update Stock'}
             </button>
