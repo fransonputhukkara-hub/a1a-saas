@@ -84,10 +84,10 @@ export function invoiceMessage(inv: Invoice, shop: ShopLike): string {
   const link = inv.id ? `\n🧾 View invoice: ${origin}/i/${inv.id}\n` : ''
 
   const socials: string[] = []
-  if (shop.google_link) socials.push(`⭐ Review us: ${shop.google_link}`)
-  if (shop.instagram_link) socials.push(`📸 Instagram: ${shop.instagram_link}`)
-  if (shop.facebook_link) socials.push(`👍 Facebook: ${shop.facebook_link}`)
-  const socialBlock = socials.length ? `\n${socials.join('\n')}\n` : ''
+  if (shop.google_link) socials.push(`⭐ Rate us on Google:\n${shop.google_link}`)
+  if (shop.instagram_link) socials.push(`📸 Instagram:\n${shop.instagram_link}`)
+  if (shop.facebook_link) socials.push(`👍 Facebook:\n${shop.facebook_link}`)
+  const socialBlock = socials.length ? `\n— Stay connected —\n${socials.join('\n')}\n` : ''
 
   return (
     `🏪 ${shop.name}\n` +

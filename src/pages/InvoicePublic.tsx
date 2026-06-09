@@ -95,19 +95,52 @@ export default function InvoicePublic() {
           )}
         </div>
 
-        <div style={footer}>
-          <div style={{ fontSize: '0.72rem', letterSpacing: '0.12em', color: '#f5d98a', textTransform: 'uppercase' }}>Thank You for Shopping with Us</div>
-          {(shop.google_link || shop.instagram_link || shop.facebook_link) && (
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 14, marginTop: 10, flexWrap: 'wrap' }}>
-              {shop.google_link && <a href={shop.google_link} target="_blank" rel="noopener noreferrer" style={socialLink}>⭐ Review</a>}
-              {shop.instagram_link && <a href={shop.instagram_link} target="_blank" rel="noopener noreferrer" style={socialLink}>📸 Instagram</a>}
-              {shop.facebook_link && <a href={shop.facebook_link} target="_blank" rel="noopener noreferrer" style={socialLink}>👍 Facebook</a>}
+        {(shop.google_link || shop.instagram_link || shop.facebook_link) && (
+          <div style={{ padding: '18px 24px 4px', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.62rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: '#c9921a', marginBottom: 12 }}>Stay Connected With Us</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {shop.google_link && (
+                <a href={shop.google_link} target="_blank" rel="noopener noreferrer" style={{ ...socialBtn, background: '#fff', color: '#3c4043', border: '1px solid #dadce0' }}>
+                  <GoogleIcon /> Rate us on Google
+                </a>
+              )}
+              {shop.instagram_link && (
+                <a href={shop.instagram_link} target="_blank" rel="noopener noreferrer" style={{ ...socialBtn, background: 'linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)', color: '#fff' }}>
+                  <InstaIcon /> Follow on Instagram
+                </a>
+              )}
+              {shop.facebook_link && (
+                <a href={shop.facebook_link} target="_blank" rel="noopener noreferrer" style={{ ...socialBtn, background: '#1877f2', color: '#fff' }}>
+                  <FbIcon /> Like us on Facebook
+                </a>
+              )}
             </div>
-          )}
+          </div>
+        )}
+
+        <div style={footer}>
+          <div style={{ fontSize: '0.85rem', fontStyle: 'italic', color: 'rgba(245,217,138,0.85)' }}>{shop.footer}</div>
+          <div style={{ fontSize: '0.62rem', letterSpacing: '0.1em', color: 'rgba(245,217,138,0.45)', marginTop: 8 }}>{shop.name} · {shop.phone}</div>
         </div>
         <div style={botBar} />
       </div>
     </div>
+  )
+}
+
+function GoogleIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15A11 11 0 0 0 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg>
+  )
+}
+function InstaIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="4" /><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" /></svg>
+  )
+}
+function FbIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg>
   )
 }
 
@@ -130,5 +163,5 @@ const metaVal: React.CSSProperties = { fontSize: '0.9rem', color: '#f5d98a' }
 const blockLabel: React.CSSProperties = { fontSize: '0.55rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: '#c9921a', marginBottom: 4 }
 const th: React.CSSProperties = { fontSize: '0.6rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#f5d98a', padding: '10px 12px', textAlign: 'left', fontWeight: 600 }
 const td: React.CSSProperties = { padding: '11px 12px', fontSize: '0.85rem', color: '#2c1810' }
-const footer: React.CSSProperties = { background: '#6b1a1a', padding: '16px 24px', textAlign: 'center' }
-const socialLink: React.CSSProperties = { fontSize: '0.7rem', color: '#f5d98a', textDecoration: 'none', border: '1px solid rgba(201,146,26,0.4)', padding: '4px 10px', borderRadius: 20 }
+const footer: React.CSSProperties = { background: '#6b1a1a', padding: '18px 24px', textAlign: 'center' }
+const socialBtn: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 16px', borderRadius: 10, fontSize: '0.85rem', fontWeight: 600, textDecoration: 'none', fontFamily: 'system-ui, sans-serif', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }
