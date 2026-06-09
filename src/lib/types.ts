@@ -58,6 +58,13 @@ export interface Supplier {
   created_at: string
 }
 
+export interface WhatsappTemplate {
+  id: string
+  title: string
+  body: string
+  created_at: string
+}
+
 export interface PurchaseReturn {
   id: string
   purchase_id: string | null

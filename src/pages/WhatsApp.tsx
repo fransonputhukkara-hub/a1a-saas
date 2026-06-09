@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import type { Customer, Invoice } from '../lib/types'
+import type { Customer, Invoice, WhatsappTemplate } from '../lib/types'
 import { inr, whatsappLink } from '../lib/format'
 import { useShop } from '../lib/ShopContext'
 import { Card, PageHeader, Pill, Empty } from '../components/ui'
@@ -12,20 +12,25 @@ interface Enriched extends Customer {
   lastOrder: number | null
 }
 
+// Built-in starter templates, seeded into the DB on first use.
+const SEED_TEMPLATES = [
+  { title: '🎉 Festival Collection', body: 'Good day [Name]! 🌟 New collection just arrived at [Shop]. Come visit us! 👔' },
+  { title: '💰 Balance Reminder', body: 'Hi [Name]! Your order at [Shop] is ready. A balance of ₹[Amt] is pending — please settle & collect. 😊' },
+  { title: '💔 Win-Back', body: 'We miss you [Name]! 😢 New collections have arrived at [Shop]. Visit us for a special discount! 🎁' },
+]
+
 export default function WhatsApp() {
   const { shop } = useShop()
   const [customers, setCustomers] = useState<Enriched[]>([])
   const [segment, setSegment] = useState<SegmentId>('all')
   const [loading, setLoading] = useState(true)
 
-  const TEMPLATES = useMemo(() => [
-    { id: 'festival', title: '🎉 Festival Collection', body: `Good day [Name]! 🌟 New collection just arrived at ${shop.name}. Come visit us! 👔` },
-    { id: 'balance', title: '💰 Balance Reminder', body: `Hi [Name]! Your order at ${shop.name} is ready. A balance of ₹[Amt] is pending — please settle & collect. 😊` },
-    { id: 'winback', title: '💔 Win-Back', body: `We miss you [Name]! 😢 New collections have arrived at ${shop.name}. Visit us for a special discount! 🎁` },
-  ], [shop.name])
-
-  const [templateId, setTemplateId] = useState('festival')
-  const [body, setBody] = useState(TEMPLATES[0].body)
+  // Templates (persisted in DB)
+  const [templates, setTemplates] = useState<WhatsappTemplate[]>([])
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [title, setTitle] = useState('')
+  const [body, setBody] = useState('')
+  const [tmplMsg, setTmplMsg] = useState<string | null>(null)
 
   // Selection + send-queue state
   const [selected, setSelected] = useState<Set<string>>(new Set())
@@ -34,7 +39,21 @@ export default function WhatsApp() {
   const [sentIds, setSentIds] = useState<Set<string>>(new Set())
   const [done, setDone] = useState(false)
 
+  async function loadTemplates() {
+    let { data } = await supabase.from('whatsapp_templates').select('*').order('created_at')
+    let rows = (data as WhatsappTemplate[]) ?? []
+    // Seed the starter templates the first time.
+    if (rows.length === 0) {
+      await supabase.from('whatsapp_templates').insert(SEED_TEMPLATES)
+      const res = await supabase.from('whatsapp_templates').select('*').order('created_at')
+      rows = (res.data as WhatsappTemplate[]) ?? []
+    }
+    setTemplates(rows)
+    if (rows.length && !selectedId) selectTemplate(rows[0])
+  }
+
   useEffect(() => {
+    loadTemplates()
     Promise.all([
       supabase.from('customers').select('*'),
       supabase.from('invoices').select('customer_id, balance_due, created_at'),
@@ -52,6 +71,41 @@ export default function WhatsApp() {
     })
   }, [])
 
+  function flash(m: string) { setTmplMsg(m); setTimeout(() => setTmplMsg(null), 2000) }
+
+  function selectTemplate(t: WhatsappTemplate) {
+    setSelectedId(t.id)
+    setTitle(t.title)
+    setBody(t.body)
+  }
+  function newTemplate() {
+    setSelectedId(null)
+    setTitle('')
+    setBody('')
+  }
+  async function saveAsNew() {
+    if (!title.trim() || !body.trim()) return flash('Add a title and message first.')
+    const { data } = await supabase.from('whatsapp_templates').insert({ title: title.trim(), body: body.trim() }).select().single()
+    await loadTemplates()
+    if (data) setSelectedId((data as WhatsappTemplate).id)
+    flash('Template saved ✅')
+  }
+  async function updateTemplate() {
+    if (!selectedId) return saveAsNew()
+    if (!title.trim() || !body.trim()) return flash('Add a title and message first.')
+    await supabase.from('whatsapp_templates').update({ title: title.trim(), body: body.trim() }).eq('id', selectedId)
+    await loadTemplates()
+    flash('Template updated ✅')
+  }
+  async function deleteTemplate() {
+    if (!selectedId) return
+    if (!window.confirm('Delete this template?')) return
+    await supabase.from('whatsapp_templates').delete().eq('id', selectedId)
+    setSelectedId(null); setTitle(''); setBody('')
+    await loadTemplates()
+    flash('Template deleted')
+  }
+
   const now = Date.now()
   const NINETY = 90 * 24 * 60 * 60 * 1000
 
@@ -65,15 +119,11 @@ export default function WhatsApp() {
   const list = segments[segment]
   const withPhone = list.filter((c) => c.phone)
 
-  function pickTemplate(id: string) {
-    const t = TEMPLATES.find((x) => x.id === id)
-    if (!t) return
-    setTemplateId(id)
-    setBody(t.body)
-  }
-
   function messageFor(c: Enriched) {
-    return body.replace(/\[Name\]/g, c.name.split(' ')[0]).replace(/\[Amt\]/g, String(c.balance))
+    return body
+      .replace(/\[Name\]/g, c.name.split(' ')[0])
+      .replace(/\[Amt\]/g, String(c.balance))
+      .replace(/\[Shop\]/g, shop.name)
   }
 
   function toggle(id: string) {
@@ -192,31 +242,57 @@ export default function WhatsApp() {
               ))}
             </div>
           </Card>
-          <Card title="2 · Message">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
-              {TEMPLATES.map((t) => (
+          <Card title="2 · Message Templates">
+            {tmplMsg && <div className="alert-strip a-green" style={{ marginBottom: 10 }}>{tmplMsg}</div>}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' }}>Saved Templates</span>
+              <button className="btn btn-outline btn-sm" onClick={newTemplate}>＋ New</button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
+              {templates.length === 0 ? (
+                <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>No templates yet — create one below.</div>
+              ) : templates.map((t) => (
                 <button
                   key={t.id}
-                  onClick={() => pickTemplate(t.id)}
+                  onClick={() => selectTemplate(t)}
                   style={{
                     textAlign: 'left', padding: '8px 12px', borderRadius: 10, cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600,
-                    background: templateId === t.id ? 'var(--green-l)' : 'rgba(255,255,255,0.5)',
-                    border: `1.5px solid ${templateId === t.id ? 'var(--green)' : 'rgba(0,0,0,0.08)'}`,
+                    background: selectedId === t.id ? 'var(--green-l)' : 'rgba(255,255,255,0.5)',
+                    border: `1.5px solid ${selectedId === t.id ? 'var(--green)' : 'rgba(0,0,0,0.08)'}`,
                   }}
                 >
                   {t.title}
                 </button>
               ))}
             </div>
-            <textarea
-              className="glass-input"
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              rows={4}
-              style={{ width: '100%', resize: 'vertical', fontFamily: 'inherit', fontSize: '0.82rem', lineHeight: 1.5 }}
-            />
-            <div style={{ fontSize: '0.68rem', color: 'var(--muted)', marginTop: 6 }}>
-              Use <strong>[Name]</strong> for the customer’s name and <strong>[Amt]</strong> for their balance.
+
+            <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: 12 }}>
+              <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 8 }}>
+                {selectedId ? 'Edit Template' : 'New Template'}
+              </div>
+              <input
+                className="glass-input"
+                value={title}
+                placeholder="Template name (e.g. Diwali Offer)"
+                onChange={(e) => setTitle(e.target.value)}
+                style={{ width: '100%', marginBottom: 8, fontSize: '0.82rem' }}
+              />
+              <textarea
+                className="glass-input"
+                value={body}
+                placeholder="Type your message…"
+                onChange={(e) => setBody(e.target.value)}
+                rows={4}
+                style={{ width: '100%', resize: 'vertical', fontFamily: 'inherit', fontSize: '0.82rem', lineHeight: 1.5 }}
+              />
+              <div style={{ fontSize: '0.68rem', color: 'var(--muted)', margin: '6px 0 10px' }}>
+                Tags: <strong>[Name]</strong> = customer name · <strong>[Amt]</strong> = balance · <strong>[Shop]</strong> = shop name
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {selectedId && <button className="btn btn-gold btn-sm" onClick={updateTemplate}>Save Changes</button>}
+                <button className="btn btn-outline btn-sm" onClick={saveAsNew}>Save as New</button>
+                {selectedId && <button className="btn btn-outline btn-sm btn-danger" onClick={deleteTemplate}>Delete</button>}
+              </div>
             </div>
           </Card>
         </div>
