@@ -94,6 +94,28 @@ export function downloadVcf(filename: string, vcards: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
+/** Parse a .vcf file's text into { name, phone } contacts. */
+export function parseVCards(text: string): { name: string; phone: string | null }[] {
+  const out: { name: string; phone: string | null }[] = []
+  const cards = text.split(/BEGIN:VCARD/i).slice(1)
+  for (const card of cards) {
+    let name = ''
+    let phone: string | null = null
+    for (const raw of card.split(/\r?\n/)) {
+      const line = raw.trim()
+      const colon = line.indexOf(':')
+      if (colon < 0) continue
+      const key = line.slice(0, colon).toUpperCase()
+      const value = line.slice(colon + 1).trim()
+      if (key === 'FN' && value) name = value
+      else if (key.startsWith('N') && !name && value) name = value.replace(/;/g, ' ').trim()
+      else if (key.startsWith('TEL') && !phone && value) phone = value
+    }
+    if (name || phone) out.push({ name: name || 'Unnamed', phone: phone || null })
+  }
+  return out
+}
+
 /** Build a wa.me link with a pre-filled, URL-encoded message. */
 export function whatsappLink(phone: string | null | undefined, message: string): string {
   const digits = (phone ?? '').replace(/[^\d]/g, '')

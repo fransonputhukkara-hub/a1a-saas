@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import type { Customer, Invoice } from '../lib/types'
-import { inr, shortDate, longDate, customerVCard, downloadVcf } from '../lib/format'
+import { inr, shortDate, longDate, customerVCard, downloadVcf, parseVCards } from '../lib/format'
 import { Card, PageHeader, Pill, Field, Input, Empty } from '../components/ui'
 import { useShop } from '../lib/ShopContext'
 
@@ -17,6 +17,8 @@ export default function Customers() {
   const [form, setForm] = useState({ name: '', phone: '', address: '' })
   const [selected, setSelected] = useState<Customer | null>(null)
   const [history, setHistory] = useState<Invoice[]>([])
+  const [importing, setImporting] = useState(false)
+  const [importMsg, setImportMsg] = useState<string | null>(null)
 
   async function load() {
     setLoading(true)
@@ -64,6 +66,35 @@ export default function Customers() {
     downloadVcf(`${shop.name.replace(/[^\w]+/g, '-')}-contacts.vcf`, all)
   }
 
+  async function importContacts(file: File) {
+    setImporting(true)
+    try {
+      const text = await file.text()
+      const parsed = parseVCards(text)
+      // Skip contacts whose phone already exists.
+      const existingPhones = new Set(customers.map((c) => (c.phone ?? '').replace(/\D/g, '')).filter(Boolean))
+      const seen = new Set<string>()
+      const rows: { name: string; phone: string | null }[] = []
+      let skipped = 0
+      for (const p of parsed) {
+        const digits = (p.phone ?? '').replace(/\D/g, '')
+        if (digits && (existingPhones.has(digits) || seen.has(digits))) { skipped++; continue }
+        if (digits) seen.add(digits)
+        rows.push({ name: p.name, phone: p.phone })
+      }
+      if (rows.length > 0) {
+        await supabase.from('customers').insert(rows)
+      }
+      setImportMsg(`Imported ${rows.length} contact${rows.length === 1 ? '' : 's'}${skipped ? `, skipped ${skipped} duplicate${skipped === 1 ? '' : 's'}` : ''}.`)
+      load()
+    } catch {
+      setImportMsg('Could not read that file. Make sure it is a .vcf contacts file.')
+    } finally {
+      setImporting(false)
+      setTimeout(() => setImportMsg(null), 4000)
+    }
+  }
+
   async function openHistory(c: Customer) {
     setSelected(c)
     const { data } = await supabase
@@ -102,6 +133,10 @@ export default function Customers() {
         sub={`${customers.length} registered · ${newThisMonth} new this month`}
         actions={
           <>
+            <label className="btn btn-outline" style={{ cursor: 'pointer' }} title="Import contacts from a .vcf file">
+              {importing ? 'Importing…' : '📥 Import Contacts'}
+              <input type="file" accept=".vcf,text/vcard" style={{ display: 'none' }} disabled={importing} onChange={(e) => { const f = e.target.files?.[0]; if (f) importContacts(f); e.target.value = '' }} />
+            </label>
             <button className="btn btn-outline" onClick={exportAllContacts} title="Download all customers as a .vcf to import into your phone">
               📇 Export Contacts
             </button>
@@ -111,6 +146,8 @@ export default function Customers() {
           </>
         }
       />
+
+      {importMsg && <div className="alert-strip a-green">{importMsg}</div>}
 
       {adding && (
         <Card title="New Customer" className="mb16">
