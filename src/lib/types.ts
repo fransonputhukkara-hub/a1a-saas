@@ -99,6 +99,18 @@ export interface InventoryItem {
   buying_rate: number
   selling_rate: number
   barcode: string | null
+  online: boolean
+  created_at: string
+}
+
+export interface Order {
+  id: string
+  customer_name: string
+  customer_phone: string | null
+  customer_address: string | null
+  items: LineItem[]
+  total: number
+  status: string
   created_at: string
 }
 

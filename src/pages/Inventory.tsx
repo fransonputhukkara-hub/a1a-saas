@@ -4,15 +4,16 @@ import type { InventoryItem } from '../lib/types'
 import { inr } from '../lib/format'
 import { Card, PageHeader, Pill, Kpi, Field, Input, Select, Empty } from '../components/ui'
 import { Barcode, generateBarcode } from '../components/Barcode'
-import { SHOP } from '../lib/supabase'
+import { useShop } from '../lib/ShopContext'
 
 const emptyForm = {
   id: '' as string | '',
   name: '', sku: '', category: 'Fabric', barcode: '',
-  in_stock: 0, min_level: 5, buying_rate: 0, selling_rate: 0,
+  in_stock: 0, min_level: 5, buying_rate: 0, selling_rate: 0, online: true,
 }
 
 export default function Inventory() {
+  const { shop } = useShop()
   const [items, setItems] = useState<InventoryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -49,6 +50,7 @@ export default function Inventory() {
       min_level: Number(form.min_level),
       buying_rate: Number(form.buying_rate),
       selling_rate: Number(form.selling_rate),
+      online: form.online,
     }
     if (form.id) await supabase.from('inventory').update(payload).eq('id', form.id)
     else await supabase.from('inventory').insert(payload)
@@ -63,6 +65,7 @@ export default function Inventory() {
       barcode: it.barcode ?? '',
       in_stock: Number(it.in_stock), min_level: Number(it.min_level),
       buying_rate: Number(it.buying_rate), selling_rate: Number(it.selling_rate),
+      online: it.online ?? true,
     })
     setShowForm(true)
   }
@@ -123,7 +126,7 @@ export default function Inventory() {
                   <div className="label-name">{it.name}</div>
                   <Barcode value={it.barcode!} height={42} fontSize={11} />
                   <div className="label-price">{inr(it.selling_rate)}</div>
-                  <div style={{ fontSize: '0.6rem', color: 'var(--muted)' }}>{SHOP.name}</div>
+                  <div style={{ fontSize: '0.6rem', color: 'var(--muted)' }}>{shop.name}</div>
                 </div>
               ))}
             </div>
@@ -184,7 +187,11 @@ export default function Inventory() {
             <Field label="Buying Rate"><Input type="number" value={form.buying_rate} onChange={(e) => setForm({ ...form, buying_rate: Number(e.target.value) })} /></Field>
             <Field label="Selling Rate"><Input type="number" value={form.selling_rate} onChange={(e) => setForm({ ...form, selling_rate: Number(e.target.value) })} /></Field>
           </div>
-          <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.82rem', fontWeight: 600, marginTop: 14, cursor: 'pointer' }}>
+            <input type="checkbox" checked={form.online} onChange={(e) => setForm({ ...form, online: e.target.checked })} />
+            Show in online store
+          </label>
+          <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
             <button className="btn btn-primary" onClick={saveForm}>{form.id ? 'Update' : 'Save'} Product</button>
             <button className="btn btn-outline" onClick={() => setShowForm(false)}>Cancel</button>
           </div>

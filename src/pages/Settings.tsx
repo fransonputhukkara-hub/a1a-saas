@@ -15,6 +15,14 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'plan', label: '💳 Plan & Billing' },
 ]
 
+// Shared link fields — rendered as inputs and written back on save.
+const SOCIAL_FIELDS: { key: 'google_link' | 'website_link' | 'instagram_link' | 'facebook_link'; label: string; placeholder: string }[] = [
+  { key: 'google_link', label: 'Google Review Link', placeholder: 'https://g.page/r/…' },
+  { key: 'website_link', label: 'Shop Website Link', placeholder: 'https://yourshop.com' },
+  { key: 'instagram_link', label: 'Instagram Link', placeholder: 'https://instagram.com/…' },
+  { key: 'facebook_link', label: 'Facebook Link', placeholder: 'https://facebook.com/…' },
+]
+
 export default function Settings() {
   const { refresh: refreshShop } = useShop()
   const [tab, setTab] = useState<Tab>('shop')
@@ -43,14 +51,23 @@ export default function Settings() {
       location: settings.location,
       invoice_prefix: settings.invoice_prefix,
       invoice_footer: settings.invoice_footer,
-      instagram_link: settings.instagram_link || null,
-      facebook_link: settings.facebook_link || null,
-      google_link: settings.google_link || null,
-      website_link: settings.website_link || null,
+      ...Object.fromEntries(SOCIAL_FIELDS.map((f) => [f.key, settings[f.key] || null])),
     }).eq('id', 1)
     refreshShop()
-    setMsg('Settings saved ✅')
+    flash('Settings saved ✅')
+  }
+
+  function flash(m: string) {
+    setMsg(m)
     setTimeout(() => setMsg(null), 2500)
+  }
+
+  // Persist a single logo_url change (used by both upload and remove).
+  async function updateLogoUrl(url: string | null, message: string) {
+    setSettings((s) => (s ? { ...s, logo_url: url } : s))
+    await supabase.from('settings').update({ logo_url: url }).eq('id', 1)
+    refreshShop()
+    flash(message)
   }
 
   async function uploadLogo(blob: Blob) {
@@ -59,21 +76,10 @@ export default function Settings() {
     const { error: upErr } = await supabase.storage.from('logos').upload(path, blob, { upsert: true, contentType: 'image/png' })
     if (upErr) { setMsg('Logo upload failed: ' + upErr.message); return }
     const { data } = supabase.storage.from('logos').getPublicUrl(path)
-    const url = data.publicUrl
-    setSettings((s) => (s ? { ...s, logo_url: url } : s))
-    await supabase.from('settings').update({ logo_url: url }).eq('id', 1)
-    refreshShop()
-    setMsg('Logo updated ✅')
-    setTimeout(() => setMsg(null), 2500)
+    await updateLogoUrl(data.publicUrl, 'Logo updated ✅')
   }
 
-  async function removeLogo() {
-    setSettings((s) => (s ? { ...s, logo_url: null } : s))
-    await supabase.from('settings').update({ logo_url: null }).eq('id', 1)
-    refreshShop()
-    setMsg('Logo removed')
-    setTimeout(() => setMsg(null), 2500)
-  }
+  const removeLogo = () => updateLogoUrl(null, 'Logo removed')
 
   const set = (k: keyof SettingsRow, v: string) => setSettings((s) => (s ? { ...s, [k]: v } : s))
   const tg = (k: string) => (v: boolean) => setToggles((t) => ({ ...t, [k]: v }))
@@ -129,21 +135,12 @@ export default function Settings() {
                   <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginBottom: 12 }}>
                     Added to the bill (WhatsApp message + invoice page) so customers can follow & review you.
                   </div>
-                  <Field label="Google Review Link">
-                    <Input value={settings.google_link ?? ''} placeholder="https://g.page/r/…" onChange={(e) => set('google_link', e.target.value)} />
-                  </Field>
-                  <div style={{ marginTop: 12 }}>
-                    <Field label="Shop Website Link">
-                      <Input value={settings.website_link ?? ''} placeholder="https://yourshop.com" onChange={(e) => set('website_link', e.target.value)} />
-                    </Field>
-                  </div>
-                  <div className="form-row mb16" style={{ marginTop: 12 }}>
-                    <Field label="Instagram Link">
-                      <Input value={settings.instagram_link ?? ''} placeholder="https://instagram.com/…" onChange={(e) => set('instagram_link', e.target.value)} />
-                    </Field>
-                    <Field label="Facebook Link">
-                      <Input value={settings.facebook_link ?? ''} placeholder="https://facebook.com/…" onChange={(e) => set('facebook_link', e.target.value)} />
-                    </Field>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {SOCIAL_FIELDS.map((f) => (
+                      <Field key={f.key} label={f.label}>
+                        <Input value={settings[f.key] ?? ''} placeholder={f.placeholder} onChange={(e) => set(f.key, e.target.value)} />
+                      </Field>
+                    ))}
                   </div>
                   <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', margin: '18px 0 14px' }} />
                   <div className="card-title">Feature Toggles</div>

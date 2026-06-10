@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import { useAuth } from '../lib/AuthContext'
-import { useShop } from '../lib/ShopContext'
+import { useShop, ShopLogo } from '../lib/ShopContext'
 
 const PAGE_META: Record<string, { title: string; sub: string }> = {
   '/': { title: 'Dashboard', sub: '' },
@@ -56,7 +56,7 @@ export default function Layout() {
             <button className="btn btn-gold no-print" onClick={() => navigate('/sale')}>
               ＋ <span className="btn-label">New Bill</span>
             </button>
-            <div className="avatar">TC</div>
+            <ShopLogo size={36} radius={18} />
             <button className="btn btn-outline no-print" onClick={() => signOut()}>
               <span className="btn-label">Sign Out</span>
               <span className="btn-icon-only" aria-hidden="true">⎋</span>
