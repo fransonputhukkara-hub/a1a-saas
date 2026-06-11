@@ -14,7 +14,7 @@ export default function Customers() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [adding, setAdding] = useState(false)
-  const [form, setForm] = useState({ name: '', phone: '', address: '' })
+  const [form, setForm] = useState({ name: '', phone: '+91 ', address: '', consent: false })
   const [selected, setSelected] = useState<Customer | null>(null)
   const [history, setHistory] = useState<Invoice[]>([])
   const [importing, setImporting] = useState(false)
@@ -41,16 +41,17 @@ export default function Customers() {
   async function addCustomer() {
     if (!form.name.trim()) return
     const name = form.name.trim()
-    const phone = form.phone.trim()
+    const phone = form.phone.trim() === '+91' ? '' : form.phone.trim()
     await supabase.from('customers').insert({
       name,
       phone: phone || null,
       address: form.address.trim() || null,
+      consent: form.consent,
     })
     // Offer to save the new customer straight to the phone's contacts so
     // WhatsApp shows their name. (Downloads a .vcf the owner taps to import.)
     if (phone) downloadVcf(`${name}.vcf`, customerVCard(name, phone, shop.name))
-    setForm({ name: '', phone: '', address: '' })
+    setForm({ name: '', phone: '+91 ', address: '', consent: false })
     setAdding(false)
     load()
   }
@@ -156,6 +157,10 @@ export default function Customers() {
             <Field label="Phone"><Input value={form.phone} placeholder="+91…" onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
             <Field label="Location / Address"><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></Field>
           </div>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: '0.8rem', margin: '4px 0 14px', cursor: 'pointer', lineHeight: 1.5 }}>
+            <input type="checkbox" style={{ marginTop: 3 }} checked={form.consent} onChange={(e) => setForm({ ...form, consent: e.target.checked })} />
+            <span>Customer agrees to receive invoices and promotional offers via WhatsApp <span style={{ color: 'var(--muted)' }}>(As per DPDP Act 2023)</span></span>
+          </label>
           <div style={{ display: 'flex', gap: 10 }}>
             <button className="btn btn-primary" onClick={addCustomer}>Save Customer</button>
             <button className="btn btn-outline" onClick={() => setAdding(false)}>Cancel</button>
@@ -185,7 +190,12 @@ export default function Customers() {
                   const bal = balances[c.id] ?? 0
                   return (
                     <tr key={c.id} style={{ cursor: 'pointer' }} onClick={() => openHistory(c)}>
-                      <td><strong>{c.name}</strong></td>
+                      <td>
+                        <strong>{c.name}</strong>
+                        <span title={c.consent ? 'WhatsApp consent given (DPDP)' : 'No WhatsApp consent'} style={{ marginLeft: 6, fontSize: '0.72rem' }}>
+                          {c.consent ? '🟢' : '⚪'}
+                        </span>
+                      </td>
                       <td>{c.phone ?? '—'}</td>
                       <td>{c.address ?? '—'}</td>
                       <td className="r">{c.total_orders}</td>
@@ -216,6 +226,11 @@ export default function Customers() {
                 <div className="font-serif" style={{ fontSize: '1.2rem' }}>{selected.name}</div>
                 <div style={{ fontSize: '0.74rem', color: 'var(--muted)' }}>
                   {selected.phone ?? '—'} · {selected.address ?? '—'} · Joined {longDate(selected.created_at)}
+                </div>
+                <div style={{ marginTop: 6 }}>
+                  <Pill tone={selected.consent ? 'green' : 'gray'}>
+                    {selected.consent ? '🟢 WhatsApp consent given' : '⚪ No WhatsApp consent'}
+                  </Pill>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>

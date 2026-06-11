@@ -14,6 +14,7 @@ export interface Customer {
   created_at: string
   total_orders: number
   lifetime_value: number
+  consent: boolean
 }
 
 export interface Invoice {

@@ -2,8 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Customer, Invoice, InventoryItem, LineItem } from '../lib/types'
 import { inr, today, whatsappLink, invoiceMessage } from '../lib/format'
+import { adjustStock } from '../lib/inventory'
 import { useShop } from '../lib/ShopContext'
-import { Card, PageHeader, Field, Input, Select } from '../components/ui'
+import { Card, PageHeader, Field, Input } from '../components/ui'
 
 const blankItem = (): LineItem => ({ name: '', qty: 1, rate: 0 })
 
@@ -15,12 +16,11 @@ export default function Sale() {
   const [scanMsg, setScanMsg] = useState<{ tone: 'green' | 'red'; text: string } | null>(null)
   const scanRef = useRef<HTMLInputElement>(null)
   const [custName, setCustName] = useState('')
-  const [custPhone, setCustPhone] = useState('')
+  const [custPhone, setCustPhone] = useState('+91 ')
   const [custId, setCustId] = useState<string | null>(null)
+  const [custConsent, setCustConsent] = useState(false)
   const [showSuggest, setShowSuggest] = useState(false)
 
-  const [deliveryDate, setDeliveryDate] = useState('')
-  const [trialDate, setTrialDate] = useState('')
   const [notes, setNotes] = useState('')
 
   const [items, setItems] = useState<LineItem[]>([blankItem()])
@@ -95,6 +95,7 @@ export default function Sale() {
     setCustId(c.id)
     setCustName(c.name)
     setCustPhone(c.phone ?? '')
+    setCustConsent(c.consent ?? false)
     setShowSuggest(false)
   }
 
@@ -114,6 +115,15 @@ export default function Sale() {
     if (!custName.trim()) return setError('Enter a customer name.')
     if (cleanItems.length === 0) return setError('Add at least one item.')
 
+    // Stock guard — don't bill more than what's in stock for known products.
+    for (const it of cleanItems) {
+      const match = inventory.find((p) => p.name.toLowerCase() === it.name.trim().toLowerCase())
+      if (match && Number(it.qty) > Number(match.in_stock)) {
+        return setError(`Only ${match.in_stock} of "${match.name}" in stock — can't bill ${it.qty}.`)
+      }
+    }
+
+    const phone = custPhone.trim() === '+91' ? '' : custPhone.trim()
     setSaving(true)
     try {
       // 1. Ensure customer exists / get id
@@ -121,11 +131,14 @@ export default function Sale() {
       if (!customerId) {
         const { data: newCust, error: cErr } = await supabase
           .from('customers')
-          .insert({ name: custName.trim(), phone: custPhone.trim() || null })
+          .insert({ name: custName.trim(), phone: phone || null, consent: custConsent })
           .select()
           .single()
         if (cErr) throw cErr
         customerId = (newCust as Customer).id
+      } else {
+        // Keep consent in sync for an existing customer.
+        await supabase.from('customers').update({ consent: custConsent }).eq('id', customerId)
       }
 
       // 2. Get next invoice number from the DB function
@@ -142,7 +155,7 @@ export default function Sale() {
           invoice_number: invoiceNumber,
           customer_id: customerId,
           customer_name: custName.trim(),
-          customer_phone: custPhone.trim() || null,
+          customer_phone: phone || null,
           items: cleanItems,
           subtotal,
           discount: Number(discount || 0),
@@ -150,8 +163,6 @@ export default function Sale() {
           total,
           balance_due: balance,
           payment_method: paymentMethod,
-          delivery_date: deliveryDate || null,
-          trial_date: trialDate || null,
           status,
           notes: notes.trim() || null,
         })
@@ -159,7 +170,10 @@ export default function Sale() {
         .single()
       if (iErr) throw iErr
 
-      // 4. Update customer lifetime value + order count
+      // 4. Reduce inventory stock for sold items (keeps store & website in sync)
+      await adjustStock(cleanItems, -1)
+
+      // 5. Update customer lifetime value + order count
       const cust = customers.find((c) => c.id === customerId)
       await supabase
         .from('customers')
@@ -181,9 +195,8 @@ export default function Sale() {
     setSaved(null)
     setCustId(null)
     setCustName('')
-    setCustPhone('')
-    setDeliveryDate('')
-    setTrialDate('')
+    setCustPhone('+91 ')
+    setCustConsent(false)
     setNotes('')
     setItems([blankItem()])
     setDiscount(0)
@@ -247,15 +260,21 @@ export default function Sale() {
                 <div className="sum-row" style={{ color: 'var(--green)', fontWeight: 600 }}><span>Paid in Full</span><span>✓</span></div>
               )}
               <div className="no-print" style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <a
-                  className="btn btn-gold"
-                  href={whatsappLink(saved.customer_phone, invoiceMessage(saved, shop))}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ width: '100%' }}
-                >
-                  📲 Send on WhatsApp
-                </a>
+                {custConsent ? (
+                  <a
+                    className="btn btn-gold"
+                    href={whatsappLink(saved.customer_phone, invoiceMessage(saved, shop))}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ width: '100%' }}
+                  >
+                    📲 Send on WhatsApp
+                  </a>
+                ) : (
+                  <div style={{ fontSize: '0.7rem', color: 'var(--muted)', textAlign: 'center', padding: '8px 0' }}>
+                    WhatsApp disabled — customer hasn't given DPDP consent
+                  </div>
+                )}
                 <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => window.print()}>
                   🖨 Print
                 </button>
@@ -321,16 +340,17 @@ export default function Sale() {
               </Field>
             </div>
             <div className="form-row">
-              <Field label="Delivery Date">
-                <Input type="date" value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)} />
+              <Field label="Invoice Date">
+                <Input value={today()} readOnly tabIndex={-1} />
               </Field>
-              <Field label="Trial Date">
-                <Input type="date" value={trialDate} onChange={(e) => setTrialDate(e.target.value)} />
+              <Field label="Order Notes">
+                <Input value={notes} placeholder="Loose fit, contrast buttons…" onChange={(e) => setNotes(e.target.value)} />
               </Field>
             </div>
-            <Field label="Order Notes">
-              <Input value={notes} placeholder="Loose fit, contrast buttons…" onChange={(e) => setNotes(e.target.value)} />
-            </Field>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: '0.78rem', marginTop: 6, cursor: 'pointer', lineHeight: 1.5 }}>
+              <input type="checkbox" style={{ marginTop: 3 }} checked={custConsent} onChange={(e) => setCustConsent(e.target.checked)} />
+              <span>Customer agrees to receive invoices &amp; offers via WhatsApp <span style={{ color: 'var(--muted)' }}>(DPDP Act 2023)</span></span>
+            </label>
           </Card>
 
           <Card title="Scan Barcode">
@@ -386,17 +406,29 @@ export default function Sale() {
           </Card>
 
           <Card title="Payment">
+            <label className="form-label">Payment Method</label>
+            <div style={{ display: 'flex', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
+              {(['Cash', 'UPI', 'Credit'] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setPaymentMethod(m)}
+                  style={{
+                    flex: 1, minWidth: 90, padding: '14px 10px', borderRadius: 12, cursor: 'pointer',
+                    fontWeight: 700, fontSize: '0.9rem',
+                    border: `2px solid ${paymentMethod === m ? 'var(--ink)' : 'rgba(0,0,0,0.1)'}`,
+                    background: paymentMethod === m ? 'var(--ink)' : 'rgba(255,255,255,0.6)',
+                    color: paymentMethod === m ? '#fff' : 'var(--ink)',
+                  }}
+                >
+                  {m === 'Cash' ? '💵 ' : m === 'UPI' ? '📱 ' : '🧾 '}{m}
+                </button>
+              ))}
+            </div>
             <div className="form-row">
-              <Field label="Payment Method">
-                <Select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
-                  <option>Cash</option><option>UPI</option><option>Credit</option>
-                </Select>
-              </Field>
               <Field label="Discount (₹)">
                 <Input type="number" min={0} value={discount} onChange={(e) => setDiscount(Number(e.target.value))} />
               </Field>
-            </div>
-            <div className="form-row">
               <Field label="Amount Paid (₹)">
                 <Input type="number" min={0} value={advance} onChange={(e) => setAdvance(Number(e.target.value))} />
               </Field>

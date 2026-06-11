@@ -117,7 +117,8 @@ export default function WhatsApp() {
   }), [customers, now, NINETY])
 
   const list = segments[segment]
-  const withPhone = list.filter((c) => c.phone)
+  // DPDP Act 2023 — only message customers with a phone AND consent.
+  const withPhone = list.filter((c) => c.phone && c.consent)
 
   function messageFor(c: Enriched) {
     return body
@@ -308,7 +309,7 @@ export default function WhatsApp() {
                 <button className="btn btn-outline btn-sm" onClick={clearSel}>Clear</button>
               </div>
             </div>
-            {loading ? <Empty>Loading customers…</Empty> : withPhone.length === 0 ? <Empty>No customers with a phone in this segment.</Empty> : (
+            {loading ? <Empty>Loading customers…</Empty> : withPhone.length === 0 ? <Empty>No customers with WhatsApp consent in this segment (DPDP Act 2023).</Empty> : (
               <div className="table-wrap" style={{ maxHeight: 340, overflowY: 'auto' }}>
                 <table className="dt">
                   <thead><tr><th style={{ width: 32 }}></th><th>Customer</th><th>Phone</th><th className="r">Balance</th></tr></thead>
