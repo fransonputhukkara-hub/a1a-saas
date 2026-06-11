@@ -404,7 +404,9 @@ export default function Sale() {
               <button className="add-item-btn" onClick={addItem}>＋ Add Item</button>
             </div>
           </Card>
+        </div>
 
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Card title="Payment">
             <label className="form-label">Payment Method</label>
             <div style={{ display: 'flex', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
@@ -434,9 +436,7 @@ export default function Sale() {
               </Field>
             </div>
           </Card>
-        </div>
 
-        <div>
           <Card title="Invoice Summary" sticky>
             <div className="sum-row"><span>Subtotal</span><span>{inr(subtotal)}</span></div>
             <div className="sum-row"><span>Discount</span><span style={{ color: 'var(--green)' }}>–{inr(discount)}</span></div>
