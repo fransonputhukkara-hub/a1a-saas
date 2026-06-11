@@ -4,14 +4,15 @@ import type { Invoice, Purchase, Expense, SalesReturn, InventoryItem, Customer }
 import { inr, inrShort, shortDate, longDate, isThisMonth, monthLabel, downloadCsv } from '../lib/format'
 import { Card, PageHeader, Pill, Kpi, BarChart, Empty } from '../components/ui'
 
-type Tab = 'overview' | 'sales' | 'purchases' | 'returns' | 'customers'
-type Range = 'month' | 'all'
+type Tab = 'overview' | 'sales' | 'purchases' | 'returns' | 'expenses' | 'customers'
+type Range = 'month' | 'all' | 'custom'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'overview', label: '📊 Overview' },
   { id: 'sales', label: '🧾 Sales' },
   { id: 'purchases', label: '📦 Purchases' },
   { id: 'returns', label: '↩️ Returns' },
+  { id: 'expenses', label: '💸 Expenses' },
   { id: 'customers', label: '👥 Customers' },
 ]
 
@@ -25,6 +26,8 @@ export default function Reports() {
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<Tab>('overview')
   const [range, setRange] = useState<Range>('month')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
 
   useEffect(() => {
     Promise.all([
@@ -45,13 +48,24 @@ export default function Reports() {
     })
   }, [])
 
-  const within = (d: string | null | undefined) => (range === 'all' ? true : isThisMonth(d))
-  const rangeLabel = range === 'all' ? 'All time' : monthLabel()
+  const within = (d: string | null | undefined) => {
+    if (!d) return false
+    if (range === 'all') return true
+    if (range === 'custom') {
+      const day = String(d).slice(0, 10)
+      if (from && day < from) return false
+      if (to && day > to) return false
+      return true
+    }
+    return isThisMonth(d)
+  }
+  const rangeLabel = range === 'all' ? 'All time' : range === 'custom' ? `${from || '…'} → ${to || '…'}` : monthLabel()
 
   // ── Filtered datasets ──
-  const fInvoices = useMemo(() => invoices.filter((i) => within(i.created_at)), [invoices, range])
-  const fPurchases = useMemo(() => purchases.filter((p) => within(p.created_at)), [purchases, range])
-  const fReturns = useMemo(() => returns.filter((r) => within(r.date)), [returns, range])
+  const fInvoices = useMemo(() => invoices.filter((i) => within(i.created_at)), [invoices, range, from, to])
+  const fPurchases = useMemo(() => purchases.filter((p) => within(p.created_at)), [purchases, range, from, to])
+  const fReturns = useMemo(() => returns.filter((r) => within(r.date)), [returns, range, from, to])
+  const fExpenses = useMemo(() => expenses.filter((e) => within(e.date)), [expenses, range, from, to])
 
   const custBalance = (id: string) => invoices.filter((i) => i.customer_id === id).reduce((s, i) => s + Number(i.balance_due), 0)
 
@@ -61,7 +75,7 @@ export default function Reports() {
   const netSales = grossSales - salesReturns
   const cogs = fPurchases.reduce((s, p) => s + Number(p.total), 0)
   const grossProfit = netSales - cogs
-  const expenseTotal = expenses.filter((e) => within(e.date)).reduce((s, e) => s + Number(e.amount), 0)
+  const expenseTotal = fExpenses.reduce((s, e) => s + Number(e.amount), 0)
   const netProfit = grossProfit - expenseTotal
   const pending = invoices.reduce((s, i) => s + Number(i.balance_due), 0)
 
@@ -76,7 +90,7 @@ export default function Reports() {
   const catColors = ['var(--ink)', 'var(--gold)', 'var(--green)', 'var(--purple)', 'var(--blue)']
 
   // ── Exports ──
-  const stamp = range === 'all' ? 'all-time' : new Date().toISOString().slice(0, 7)
+  const stamp = range === 'all' ? 'all-time' : range === 'custom' ? `${from || 'start'}_${to || 'end'}` : new Date().toISOString().slice(0, 7)
   function exportSales() {
     downloadCsv(`sales-${stamp}`,
       ['Invoice', 'Date', 'Customer', 'Phone', 'Payment', 'Subtotal', 'Discount', 'Paid', 'Balance', 'Total', 'Status'],
@@ -102,6 +116,13 @@ export default function Reports() {
         (r.items ?? []).reduce((s, it) => s + Number(it.qty), 0), Number(r.total),
       ]))
   }
+  function exportExpenses() {
+    downloadCsv(`expenses-${stamp}`,
+      ['Date', 'Category', 'Description', 'Paid Via', 'Amount'],
+      fExpenses.map((e) => [
+        shortDate(e.date), e.category, e.description ?? '', e.paid_via, Number(e.amount),
+      ]))
+  }
   function exportCustomers() {
     downloadCsv('customers',
       ['Name', 'Phone', 'Orders', 'Lifetime Value', 'Balance Due', 'WhatsApp Consent', 'Joined'],
@@ -123,9 +144,14 @@ export default function Reports() {
         title="Reports & Analytics"
         sub={`Business reports — ${rangeLabel}`}
         actions={
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button className={`btn ${range === 'month' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setRange('month')}>This Month</button>
-            <button className={`btn ${range === 'all' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setRange('all')}>All Time</button>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <button className={`btn btn-sm ${range === 'month' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setRange('month')}>This Month</button>
+            <button className={`btn btn-sm ${range === 'all' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setRange('all')}>All Time</button>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 10, border: `1.5px solid ${range === 'custom' ? 'var(--ink)' : 'rgba(0,0,0,0.1)'}` }}>
+              <input type="date" value={from} max={to || undefined} onChange={(e) => { setFrom(e.target.value); setRange('custom') }} style={{ border: 'none', background: 'transparent', fontSize: '0.78rem', fontFamily: 'inherit', color: 'var(--ink)' }} />
+              <span style={{ color: 'var(--muted)' }}>→</span>
+              <input type="date" value={to} min={from || undefined} onChange={(e) => { setTo(e.target.value); setRange('custom') }} style={{ border: 'none', background: 'transparent', fontSize: '0.78rem', fontFamily: 'inherit', color: 'var(--ink)' }} />
+            </span>
           </div>
         }
       />
@@ -234,6 +260,29 @@ export default function Reports() {
                       <td>{r.reason ?? '—'}</td>
                       <td><Pill tone="blue">{r.refund_method ?? '—'}</Pill></td>
                       <td className="r">{inr(r.total)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
+      )}
+
+      {tab === 'expenses' && (
+        <Card title={`Expenses Report — ${inr(expenseTotal)} total`} actions={exportBtn(exportExpenses)}>
+          {fExpenses.length === 0 ? <Empty>No expenses in this period.</Empty> : (
+            <div className="table-wrap">
+              <table className="dt">
+                <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Paid Via</th><th className="r">Amount</th></tr></thead>
+                <tbody>
+                  {fExpenses.map((e) => (
+                    <tr key={e.id}>
+                      <td>{shortDate(e.date)}</td>
+                      <td><strong>{e.category}</strong></td>
+                      <td>{e.description ?? '—'}</td>
+                      <td><Pill tone="blue">{e.paid_via}</Pill></td>
+                      <td className="r">{inr(e.amount)}</td>
                     </tr>
                   ))}
                 </tbody>
