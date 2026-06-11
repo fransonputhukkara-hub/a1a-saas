@@ -4,6 +4,7 @@ export interface LineItem {
   name: string
   qty: number
   rate: number
+  category?: string
 }
 
 export interface Customer {

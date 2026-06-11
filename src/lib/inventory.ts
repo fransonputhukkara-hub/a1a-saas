@@ -28,10 +28,11 @@ export async function adjustStock(items: LineItem[], sign: 1 | -1) {
       // New item discovered via a purchase — start tracking it.
       await supabase.from('inventory').insert({
         name,
-        category: 'Uncategorised',
+        category: it.category?.trim() || 'Uncategorised',
         in_stock: qty,
         buying_rate: Number(it.rate || 0),
         selling_rate: Math.round(Number(it.rate || 0) * 1.5),
+        online: false, // new purchase items aren't shown online until reviewed (need a photo)
       })
     }
   }

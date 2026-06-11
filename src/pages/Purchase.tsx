@@ -5,7 +5,8 @@ import type { Purchase as PurchaseRow, LineItem, Supplier } from '../lib/types'
 import { inr, today, shortDate } from '../lib/format'
 import { Card, PageHeader, Pill, Field, Input, Select, Empty } from '../components/ui'
 
-const blank = (): LineItem => ({ name: '', qty: 1, rate: 0 })
+const CATEGORIES = ['Fabric', 'Readymade', 'Stitching', 'Accessories', 'Service', 'Uncategorised']
+const blank = (): LineItem => ({ name: '', qty: 1, rate: 0, category: 'Fabric' })
 
 export default function Purchase() {
   const [supplier, setSupplier] = useState('')
@@ -228,14 +229,17 @@ export default function Purchase() {
 
           <Card title="Items Purchased">
             <div className="items-adder">
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 30px', gap: 8, marginBottom: 8 }}>
-                {['Item / Fabric', 'Qty / Mtrs', 'Rate (₹)', ''].map((h) => (
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.3fr 0.8fr 1fr 30px', gap: 8, marginBottom: 8 }}>
+                {['Item / Fabric', 'Category', 'Qty / Mtrs', 'Rate (₹)', ''].map((h) => (
                   <span key={h} style={{ fontSize: '0.6rem', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' }}>{h}</span>
                 ))}
               </div>
               {items.map((it, i) => (
-                <div className="item-row no-amt" key={i}>
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.3fr 0.8fr 1fr 30px', gap: 8, marginBottom: 8, alignItems: 'center' }} key={i}>
                   <Input value={it.name} placeholder="Item name" onChange={(e) => setItem(i, { name: e.target.value })} />
+                  <Select value={it.category ?? 'Fabric'} onChange={(e) => setItem(i, { category: e.target.value })}>
+                    {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+                  </Select>
                   <Input type="number" min={0} value={it.qty} onChange={(e) => setItem(i, { qty: Number(e.target.value) })} />
                   <Input type="number" min={0} value={it.rate} onChange={(e) => setItem(i, { rate: Number(e.target.value) })} />
                   <button className="del-btn" onClick={() => setItems((a) => (a.length === 1 ? a : a.filter((_, j) => j !== i)))}>✕</button>
