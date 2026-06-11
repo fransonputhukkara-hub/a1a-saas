@@ -4,10 +4,11 @@ import type { Customer, Invoice, InventoryItem, LineItem } from '../lib/types'
 import { inr, today, whatsappLink, invoiceMessage } from '../lib/format'
 import { adjustStock } from '../lib/inventory'
 import { useShop } from '../lib/ShopContext'
-import { Card, PageHeader, Field, Input } from '../components/ui'
+import { Card, PageHeader, Field, Input, Select } from '../components/ui'
 import SuccessModal from '../components/SuccessModal'
 
-const blankItem = (): LineItem => ({ name: '', qty: 1, rate: 0 })
+const CATEGORIES = ['Fabric', 'Readymade', 'Stitching', 'Accessories', 'Service', 'Uncategorised']
+const blankItem = (): LineItem => ({ name: '', qty: 1, rate: 0, category: 'Fabric' })
 
 interface HeldBill {
   id: string
@@ -121,7 +122,7 @@ export default function Sale() {
       const next = [...arr]
       // Replace a leading blank row if present, otherwise append.
       const blankIdx = next.findIndex((it) => !it.name.trim())
-      const row: LineItem = { name: match.name, qty: 1, rate: Number(match.selling_rate) }
+      const row: LineItem = { name: match.name, qty: 1, rate: Number(match.selling_rate), category: match.category ?? 'Uncategorised' }
       if (blankIdx >= 0) next[blankIdx] = row
       else next.push(row)
       return next
@@ -506,14 +507,17 @@ export default function Sale() {
 
           <Card title="Items">
             <div className="items-adder">
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 30px', gap: 8, marginBottom: 8 }}>
-                {['Item', 'Qty', 'Rate', 'Amount', ''].map((h) => (
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 0.7fr 0.9fr 0.9fr 30px', gap: 8, marginBottom: 8 }}>
+                {['Item', 'Category', 'Qty', 'Rate', 'Amount', ''].map((h) => (
                   <span key={h} style={{ fontSize: '0.6rem', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' }}>{h}</span>
                 ))}
               </div>
               {items.map((it, i) => (
-                <div className="item-row" key={i}>
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 0.7fr 0.9fr 0.9fr 30px', gap: 8, marginBottom: 8, alignItems: 'center' }} key={i}>
                   <Input value={it.name} placeholder="Item name" onChange={(e) => setItem(i, { name: e.target.value })} />
+                  <Select value={it.category ?? 'Fabric'} onChange={(e) => setItem(i, { category: e.target.value })}>
+                    {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+                  </Select>
                   <Input type="number" min={0} placeholder="1" value={it.qty || ''} onChange={(e) => setItem(i, { qty: Number(e.target.value) })} />
                   <Input type="number" min={0} placeholder="0" value={it.rate || ''} onChange={(e) => setItem(i, { rate: Number(e.target.value) })} />
                   <Input value={inr(Number(it.qty) * Number(it.rate))} readOnly tabIndex={-1} />
