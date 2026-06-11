@@ -94,6 +94,29 @@ export function downloadVcf(filename: string, vcards: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
+/** Download a table as a CSV file (opens directly in Excel). */
+export function downloadCsv(
+  filename: string,
+  headers: string[],
+  rows: (string | number | null | undefined)[][],
+) {
+  const esc = (v: string | number | null | undefined) => {
+    const s = v == null ? '' : String(v)
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s
+  }
+  const csv = [headers, ...rows].map((r) => r.map(esc).join(',')).join('\r\n')
+  // Leading BOM so Excel reads UTF-8 (₹, names) correctly.
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename.endsWith('.csv') ? filename : `${filename}.csv`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
 /** Parse a .vcf file's text into { name, phone } contacts. */
 export function parseVCards(text: string): { name: string; phone: string | null }[] {
   const out: { name: string; phone: string | null }[] = []

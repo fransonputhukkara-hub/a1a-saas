@@ -6,18 +6,25 @@ export function Card({
   className = '',
   title,
   sticky,
+  actions,
 }: {
   children: ReactNode
   className?: string
   title?: string
   sticky?: boolean
+  actions?: ReactNode
 }) {
   return (
     <div
       className={`glass-card card ${className}`}
       style={sticky ? { position: 'sticky', top: 76 } : undefined}
     >
-      {title && <div className="card-title">{title}</div>}
+      {(title || actions) && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
+          {title && <div className="card-title" style={{ marginBottom: 0 }}>{title}</div>}
+          {actions}
+        </div>
+      )}
       {children}
     </div>
   )
