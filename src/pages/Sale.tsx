@@ -51,6 +51,7 @@ export default function Sale() {
   const [error, setError] = useState<string | null>(null)
   const [held, setHeld] = useState<HeldBill[]>([])
   const [showHeld, setShowHeld] = useState(false)
+  const [activeItem, setActiveItem] = useState<number | null>(null)
 
   useEffect(() => {
     supabase
@@ -159,6 +160,10 @@ export default function Sale() {
   function setItem(idx: number, patch: Partial<LineItem>) {
     setItems((arr) => arr.map((it, i) => (i === idx ? { ...it, ...patch } : it)))
   }
+  function pickProduct(idx: number, p: InventoryItem) {
+    setItem(idx, { name: p.name, rate: Number(p.selling_rate), category: p.category ?? 'Uncategorised' })
+    setActiveItem(null)
+  }
   function addItem() {
     setItems((arr) => [...arr, blankItem()])
   }
@@ -172,10 +177,14 @@ export default function Sale() {
     if (!custName.trim()) return setError('Enter a customer name.')
     if (cleanItems.length === 0) return setError('Add at least one item.')
 
-    // Stock guard — don't bill more than what's in stock for known products.
+    // Stock-only billing: every item must exist in inventory with enough stock.
+    // Items only enter inventory via a Purchase entry.
     for (const it of cleanItems) {
       const match = inventory.find((p) => p.name.toLowerCase() === it.name.trim().toLowerCase())
-      if (match && Number(it.qty) > Number(match.in_stock)) {
+      if (!match) {
+        return setError(`"${it.name}" is not in inventory. Add stock via a Purchase entry first.`)
+      }
+      if (Number(it.qty) > Number(match.in_stock)) {
         return setError(`Only ${match.in_stock} of "${match.name}" in stock — can't bill ${it.qty}.`)
       }
     }
@@ -514,7 +523,41 @@ export default function Sale() {
               </div>
               {items.map((it, i) => (
                 <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 0.7fr 0.9fr 0.9fr 30px', gap: 8, marginBottom: 8, alignItems: 'center' }} key={i}>
-                  <Input value={it.name} placeholder="Item name" onChange={(e) => setItem(i, { name: e.target.value })} />
+                  <div style={{ position: 'relative' }}>
+                    <Input
+                      value={it.name}
+                      placeholder="Search product…"
+                      onChange={(e) => { setItem(i, { name: e.target.value }); setActiveItem(i) }}
+                      onFocus={() => setActiveItem(i)}
+                      onBlur={() => setTimeout(() => setActiveItem((a) => (a === i ? null : a)), 150)}
+                    />
+                    {activeItem === i && it.name.trim() && (() => {
+                      const matches = inventory.filter((p) => p.name.toLowerCase().includes(it.name.trim().toLowerCase()))
+                      return (
+                        <div className="glass-card" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 30, marginTop: 4, padding: 6, maxHeight: 240, overflowY: 'auto' }}>
+                          {matches.length === 0 ? (
+                            <div style={{ padding: '8px 10px', fontSize: '0.78rem', color: 'var(--red)' }}>
+                              Not in inventory — add it via Purchase first.
+                            </div>
+                          ) : matches.slice(0, 8).map((p) => {
+                            const out = Number(p.in_stock) <= 0
+                            return (
+                              <div
+                                key={p.id}
+                                onMouseDown={() => !out && pickProduct(i, p)}
+                                style={{ padding: '8px 10px', borderRadius: 8, cursor: out ? 'not-allowed' : 'pointer', fontSize: '0.82rem', opacity: out ? 0.5 : 1, display: 'flex', justifyContent: 'space-between', gap: 8 }}
+                                onMouseEnter={(e) => !out && (e.currentTarget.style.background = 'rgba(0,0,0,0.04)')}
+                                onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                              >
+                                <span><strong>{p.name}</strong> <span style={{ color: 'var(--muted)' }}>· {inr(p.selling_rate)}</span></span>
+                                <span style={{ color: out ? 'var(--red)' : 'var(--green)', fontWeight: 600 }}>{out ? 'Out' : `${p.in_stock} left`}</span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )
+                    })()}
+                  </div>
                   <Select value={it.category ?? 'Fabric'} onChange={(e) => setItem(i, { category: e.target.value })}>
                     {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
                   </Select>
