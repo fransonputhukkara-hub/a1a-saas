@@ -126,8 +126,8 @@ export default function SalesReturn() {
               {items.map((it, i) => (
                 <div className="item-row no-amt" key={i}>
                   <Input value={it.name} placeholder="Item" onChange={(e) => setItem(i, { name: e.target.value })} />
-                  <Input type="number" min={0} value={it.qty} onChange={(e) => setItem(i, { qty: Number(e.target.value) })} />
-                  <Input type="number" min={0} value={it.rate} onChange={(e) => setItem(i, { rate: Number(e.target.value) })} />
+                  <Input type="number" min={0} placeholder="1" value={it.qty || ''} onChange={(e) => setItem(i, { qty: Number(e.target.value) })} />
+                  <Input type="number" min={0} placeholder="0" value={it.rate || ''} onChange={(e) => setItem(i, { rate: Number(e.target.value) })} />
                   <button className="del-btn" onClick={() => setItems((a) => (a.length === 1 ? a : a.filter((_, j) => j !== i)))}>✕</button>
                 </div>
               ))}

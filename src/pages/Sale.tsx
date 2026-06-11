@@ -84,7 +84,9 @@ export default function Sale() {
     [items]
   )
   const total = Math.max(0, subtotal - Number(discount || 0))
-  const balance = Math.max(0, total - Number(advance || 0))
+  // Amount paid can never exceed the bill total (prevents typos like 15500 for 1550).
+  const amountPaid = Math.min(Number(advance || 0), total)
+  const balance = Math.max(0, total - amountPaid)
 
   const suggestions = customers.filter(
     (c) =>
@@ -148,7 +150,7 @@ export default function Sale() {
       if (numErr) throw numErr
       const invoiceNumber = numData as string
 
-      const status = balance <= 0 ? 'paid' : Number(advance) > 0 ? 'partial' : 'pending'
+      const status = balance <= 0 ? 'paid' : amountPaid > 0 ? 'partial' : 'pending'
 
       // 3. Insert invoice
       const { data: invData, error: iErr } = await supabase
@@ -161,7 +163,7 @@ export default function Sale() {
           items: cleanItems,
           subtotal,
           discount: Number(discount || 0),
-          advance: Number(advance || 0),
+          advance: amountPaid,
           total,
           balance_due: balance,
           payment_method: paymentMethod,
@@ -422,8 +424,8 @@ export default function Sale() {
               {items.map((it, i) => (
                 <div className="item-row" key={i}>
                   <Input value={it.name} placeholder="Item name" onChange={(e) => setItem(i, { name: e.target.value })} />
-                  <Input type="number" min={0} value={it.qty} onChange={(e) => setItem(i, { qty: Number(e.target.value) })} />
-                  <Input type="number" min={0} value={it.rate} onChange={(e) => setItem(i, { rate: Number(e.target.value) })} />
+                  <Input type="number" min={0} placeholder="1" value={it.qty || ''} onChange={(e) => setItem(i, { qty: Number(e.target.value) })} />
+                  <Input type="number" min={0} placeholder="0" value={it.rate || ''} onChange={(e) => setItem(i, { rate: Number(e.target.value) })} />
                   <Input value={inr(Number(it.qty) * Number(it.rate))} readOnly tabIndex={-1} />
                   <button className="del-btn" onClick={() => removeItem(i)} aria-label="Remove">✕</button>
                 </div>
@@ -456,10 +458,10 @@ export default function Sale() {
             </div>
             <div className="form-row">
               <Field label="Discount (₹)">
-                <Input type="number" min={0} value={discount} onChange={(e) => setDiscount(Number(e.target.value))} />
+                <Input type="number" min={0} placeholder="0" value={discount || ''} onChange={(e) => setDiscount(Number(e.target.value))} />
               </Field>
               <Field label="Amount Paid (₹)">
-                <Input type="number" min={0} value={advance} onChange={(e) => setAdvance(Number(e.target.value))} />
+                <Input type="number" min={0} max={total} placeholder="0" value={advance || ''} onChange={(e) => setAdvance(Math.min(Number(e.target.value), total))} />
               </Field>
             </div>
           </Card>
@@ -468,7 +470,7 @@ export default function Sale() {
             <div className="sum-row"><span>Subtotal</span><span>{inr(subtotal)}</span></div>
             <div className="sum-row"><span>Discount</span><span style={{ color: 'var(--green)' }}>–{inr(discount)}</span></div>
             <div className="sum-row total"><span>Total</span><span>{inr(total)}</span></div>
-            <div className="sum-row paid"><span>Amount Paid ({paymentMethod})</span><span>{inr(advance)}</span></div>
+            <div className="sum-row paid"><span>Amount Paid ({paymentMethod})</span><span>{inr(amountPaid)}</span></div>
             {balance > 0 ? (
               <div className="sum-row balance"><span>Balance Due</span><span>{inr(balance)}</span></div>
             ) : (

@@ -256,8 +256,8 @@ export default function Purchase() {
                   <Select value={it.category ?? 'Fabric'} onChange={(e) => setItem(i, { category: e.target.value })}>
                     {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
                   </Select>
-                  <Input type="number" min={0} value={it.qty} onChange={(e) => setItem(i, { qty: Number(e.target.value) })} />
-                  <Input type="number" min={0} value={it.rate} onChange={(e) => setItem(i, { rate: Number(e.target.value) })} />
+                  <Input type="number" min={0} placeholder="1" value={it.qty || ''} onChange={(e) => setItem(i, { qty: Number(e.target.value) })} />
+                  <Input type="number" min={0} placeholder="0" value={it.rate || ''} onChange={(e) => setItem(i, { rate: Number(e.target.value) })} />
                   <button className="del-btn" onClick={() => setItems((a) => (a.length === 1 ? a : a.filter((_, j) => j !== i)))}>✕</button>
                 </div>
               ))}
@@ -271,7 +271,7 @@ export default function Purchase() {
               </label>
               {taxEnabled && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Input type="number" min={0} step={0.5} value={taxRate} onChange={(e) => setTaxRate(Number(e.target.value))} style={{ width: 80 }} />
+                  <Input type="number" min={0} step={0.5} placeholder="0" value={taxRate || ''} onChange={(e) => setTaxRate(Number(e.target.value))} style={{ width: 80 }} />
                   <span style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>% tax</span>
                 </div>
               )}
