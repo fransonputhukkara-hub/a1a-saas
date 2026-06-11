@@ -63,102 +63,81 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-5">
-      <div
-        aria-hidden
-        className="pointer-events-none fixed -top-32 -left-24 h-96 w-96 rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(201,168,76,0.16), transparent 70%)' }}
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none fixed -bottom-40 -right-24 h-[28rem] w-[28rem] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(26,74,138,0.14), transparent 70%)' }}
-      />
-
-      <div className="glass-card w-full max-w-md p-8 sm:p-10 relative">
-        <div className="text-center mb-8">
-          <div className="mx-auto mb-4 flex justify-center">
-            <ShopLogo size={64} />
+    <div className="login-landing">
+      {/* ── Hero panel — Kerala saree shop ── */}
+      <div className="login-hero">
+        <div className="kasavu-border" />
+        <div className="login-hero-body">
+          <div className="login-hero-logo"><ShopLogo size={92} radius={20} /></div>
+          <h1 className="login-hero-name">{shop.name}</h1>
+          <div className="login-hero-sub">Handloom · Pure Silks · Heritage Weaves of Kerala</div>
+          <div className="login-hero-orn">✦ ❖ ✦</div>
+          <p className="login-hero-quote">
+            “Every saree tells a story — woven with tradition, draped in grace.”
+          </p>
+          <div className="login-hero-tags">
+            <span>Kanjivaram</span><span>Kasavu</span><span>Soft Silk</span><span>Bridal</span>
           </div>
-          <h1 className="font-serif text-2xl" style={{ color: 'var(--ink)' }}>{shop.name}</h1>
-          <p className="mt-1 text-sm" style={{ color: 'var(--muted)' }}>{titles[mode]} · Business Suite</p>
         </div>
+        <div className="kasavu-border" />
+      </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--muted)' }}>Email</label>
-            <input
-              type="email"
-              required
-              autoFocus
-              autoComplete="username"
-              className="glass-input"
-              placeholder="owner@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+      {/* ── Form panel ── */}
+      <div className="login-form-panel">
+        <div className="login-form-inner">
+          <div className="login-form-brand">
+            <ShopLogo size={46} radius={12} />
+            <div>
+              <div className="login-form-shop">{shop.name}</div>
+              <div className="login-form-suite">Business Suite</div>
+            </div>
           </div>
 
-          {mode !== 'forgot' && (
+          <h2 className="login-form-title">{titles[mode]}</h2>
+          <p className="login-form-hint">
+            {mode === 'signin' ? 'Welcome back — sign in to manage your store.' : mode === 'signup' ? 'Create your owner account.' : 'We’ll email you a reset link.'}
+          </p>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--muted)' }}>Password</label>
-              <div className="relative">
-                <input
-                  type={showPw ? 'text' : 'password'}
-                  required
-                  autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-                  className="glass-input pr-16"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPw((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold"
-                  style={{ color: 'var(--muted)' }}
-                >
-                  {showPw ? 'Hide' : 'Show'}
-                </button>
-              </div>
+              <label className="login-label">Email</label>
+              <input type="email" required autoFocus autoComplete="username" className="glass-input" placeholder="owner@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
-          )}
 
-          {error && (
-            <div className="rounded-xl px-4 py-2.5 text-sm" style={{ background: 'var(--red-l)', color: 'var(--red)' }}>{error}</div>
-          )}
-          {info && (
-            <div className="rounded-xl px-4 py-2.5 text-sm" style={{ background: 'var(--green-l)', color: 'var(--green)' }}>{info}</div>
-          )}
-
-          <button type="submit" className="btn btn-primary w-full" disabled={loading}>
-            {loading ? 'Please wait…' : mode === 'signin' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Send Reset Link'}
-          </button>
-        </form>
-
-        <div className="mt-6 text-center text-xs space-y-2" style={{ color: 'var(--muted)' }}>
-          {mode === 'signin' && (
-            <>
+            {mode !== 'forgot' && (
               <div>
-                <button type="button" className="font-semibold underline" style={{ color: 'var(--navy)' }} onClick={() => switchMode('forgot')}>Forgot password?</button>
+                <label className="login-label">Password</label>
+                <div className="relative">
+                  <input type={showPw ? 'text' : 'password'} required autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} className="glass-input pr-16" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
+                  <button type="button" onClick={() => setShowPw((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold" style={{ color: 'var(--muted)' }}>
+                    {showPw ? 'Hide' : 'Show'}
+                  </button>
+                </div>
               </div>
-              <div>
-                No account?{' '}
-                <button type="button" className="font-semibold underline" style={{ color: 'var(--navy)' }} onClick={() => switchMode('signup')}>Create one</button>
-              </div>
-            </>
-          )}
-          {mode === 'signup' && (
-            <div>
-              Already have an account?{' '}
-              <button type="button" className="font-semibold underline" style={{ color: 'var(--navy)' }} onClick={() => switchMode('signin')}>Sign in</button>
-            </div>
-          )}
-          {mode === 'forgot' && (
-            <div>
-              <button type="button" className="font-semibold underline" style={{ color: 'var(--navy)' }} onClick={() => switchMode('signin')}>← Back to sign in</button>
-            </div>
-          )}
+            )}
+
+            {error && <div className="rounded-xl px-4 py-2.5 text-sm" style={{ background: 'var(--red-l)', color: 'var(--red)' }}>{error}</div>}
+            {info && <div className="rounded-xl px-4 py-2.5 text-sm" style={{ background: 'var(--green-l)', color: 'var(--green)' }}>{info}</div>}
+
+            <button type="submit" className="btn login-submit w-full" disabled={loading}>
+              {loading ? 'Please wait…' : mode === 'signin' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Send Reset Link'}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center text-xs space-y-2" style={{ color: 'var(--muted)' }}>
+            {mode === 'signin' && (
+              <>
+                <div><button type="button" className="login-link" onClick={() => switchMode('forgot')}>Forgot password?</button></div>
+                <div>No account?{' '}<button type="button" className="login-link" onClick={() => switchMode('signup')}>Create one</button></div>
+              </>
+            )}
+            {mode === 'signup' && (
+              <div>Already have an account?{' '}<button type="button" className="login-link" onClick={() => switchMode('signin')}>Sign in</button></div>
+            )}
+            {mode === 'forgot' && (
+              <div><button type="button" className="login-link" onClick={() => switchMode('signin')}>← Back to sign in</button></div>
+            )}
+          </div>
         </div>
       </div>
     </div>
