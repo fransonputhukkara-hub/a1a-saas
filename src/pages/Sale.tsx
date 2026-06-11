@@ -5,6 +5,7 @@ import { inr, today, whatsappLink, invoiceMessage } from '../lib/format'
 import { adjustStock } from '../lib/inventory'
 import { useShop } from '../lib/ShopContext'
 import { Card, PageHeader, Field, Input } from '../components/ui'
+import SuccessModal from '../components/SuccessModal'
 
 const blankItem = (): LineItem => ({ name: '', qty: 1, rate: 0 })
 
@@ -30,6 +31,7 @@ export default function Sale() {
 
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState<Invoice | null>(null)
+  const [showSuccess, setShowSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -184,6 +186,7 @@ export default function Sale() {
         .eq('id', customerId)
 
       setSaved(invData as Invoice)
+      setShowSuccess(true)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to save invoice.')
     } finally {
@@ -206,8 +209,32 @@ export default function Sale() {
 
   // ── Saved confirmation view ──
   if (saved) {
+    const waLink = whatsappLink(saved.customer_phone, invoiceMessage(saved, shop))
     return (
       <>
+        {showSuccess && (
+          <SuccessModal
+            title="Invoice Generated Successfully!"
+            subtitle="Your invoice has been created and saved."
+            details={[
+              { label: 'Invoice Number', value: `#${saved.invoice_number}` },
+              { label: 'Customer Name', value: saved.customer_name ?? '—' },
+              { label: 'Total Amount', value: inr(saved.total) },
+              { label: 'Date & Time', value: new Date(saved.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) },
+            ]}
+            onClose={() => setShowSuccess(false)}
+            actions={
+              <>
+                <button className="btn btn-primary" onClick={() => window.print()}>🖨 Print</button>
+                <button className="btn btn-outline" onClick={() => window.print()}>⬇ PDF</button>
+                {custConsent
+                  ? <a className="btn btn-gold" href={waLink} target="_blank" rel="noopener noreferrer">📲 WhatsApp</a>
+                  : <button className="btn btn-outline" disabled title="No DPDP consent">📲 WhatsApp</button>}
+                <button className="btn btn-outline" onClick={() => setShowSuccess(false)}>👁 View Invoice</button>
+              </>
+            }
+          />
+        )}
         <PageHeader
           title="Invoice Generated"
           sub={`#${saved.invoice_number}`}

@@ -196,6 +196,92 @@ body {
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+/* ── Success celebration modal ── */
+.success-overlay {
+  position: fixed; inset: 0; z-index: 120;
+  background: rgba(15, 15, 25, 0.55);
+  backdrop-filter: blur(5px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.2s ease both;
+}
+.success-modal {
+  position: relative;
+  background: #fff;
+  border-radius: 22px;
+  padding: 30px 26px 26px;
+  width: 100%; max-width: 420px;
+  text-align: center;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+  animation: successPop 0.4s cubic-bezier(0.22, 1.2, 0.36, 1) both;
+  overflow: hidden;
+}
+@keyframes successPop {
+  from { opacity: 0; transform: scale(0.8); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.success-check { width: 88px; height: 88px; margin: 0 auto 14px; }
+.success-check svg { width: 100%; height: 100%; }
+.success-check-circle {
+  stroke: var(--green, #1a5e3a); stroke-width: 3;
+  stroke-dasharray: 151; stroke-dashoffset: 151;
+  animation: drawCircle 0.5s ease-out 0.1s forwards;
+}
+.success-check-mark {
+  stroke: var(--green, #1a5e3a); stroke-width: 4;
+  stroke-linecap: round; stroke-linejoin: round;
+  stroke-dasharray: 40; stroke-dashoffset: 40;
+  animation: drawCheck 0.35s ease-out 0.55s forwards;
+}
+.success-check::before {
+  content: ''; position: absolute;
+  width: 88px; height: 88px; border-radius: 50%;
+  background: rgba(26, 94, 58, 0.12);
+  left: 50%; transform: translateX(-50%);
+  animation: pulseRing 0.6s ease-out 0.2s both;
+}
+@keyframes drawCircle { to { stroke-dashoffset: 0; } }
+@keyframes drawCheck { to { stroke-dashoffset: 0; } }
+@keyframes pulseRing {
+  0% { opacity: 0.8; transform: translateX(-50%) scale(0.6); }
+  100% { opacity: 0; transform: translateX(-50%) scale(1.4); }
+}
+.success-title { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--ink); margin: 0; }
+.success-sub { font-size: 0.84rem; color: var(--muted); margin: 6px 0 18px; }
+.success-details {
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 14px; padding: 6px 16px; margin-bottom: 18px; text-align: left;
+}
+.success-detail-row {
+  display: flex; justify-content: space-between; gap: 12px;
+  padding: 9px 0; font-size: 0.85rem; border-bottom: 1px dashed rgba(0, 0, 0, 0.08);
+}
+.success-detail-row:last-child { border-bottom: none; }
+.success-detail-row span { color: var(--muted); }
+.success-detail-row strong { color: var(--ink); text-align: right; }
+.success-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.success-actions .btn { width: 100%; }
+.success-doc {
+  font-size: 1.6rem; margin-top: 14px;
+  animation: floatDoc 2.2s ease-in-out infinite;
+}
+@keyframes floatDoc {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* Confetti */
+.confetti-wrap { position: absolute; inset: 0; pointer-events: none; }
+.confetti-piece {
+  position: absolute; width: 9px; height: 9px; border-radius: 2px;
+  opacity: 0; transform: translate(-50%, 0);
+  animation: confettiBurst 0.9s ease-out 0.25s forwards;
+}
+@keyframes confettiBurst {
+  0% { opacity: 1; transform: translate(-50%, 0) rotate(0); }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), var(--dy)) rotate(var(--rot)); }
+}
+
 /* ============================================================
    Shared component layer (glass theme)
    ============================================================ */

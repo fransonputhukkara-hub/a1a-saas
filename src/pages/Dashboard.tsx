@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import type { Invoice, Purchase, InventoryItem, Expense } from '../lib/types'
-import { inr, inrShort, isThisMonth, shortDate } from '../lib/format'
+import { inr, inrShort, isThisMonth } from '../lib/format'
 import { Card, StatCard, Pill, Empty } from '../components/ui'
 
 export default function Dashboard() {
@@ -49,8 +48,21 @@ export default function Dashboard() {
   const maxMonth = Math.max(1, ...months.map((m) => m.value))
 
   const today = new Date().toISOString().slice(0, 10)
-  const todaysDeliveries = invoices.filter((i) => i.delivery_date === today)
   const recent = invoices.slice(0, 5)
+
+  // Daily cash summary — today's collections grouped by payment method.
+  const todaysInvoices = invoices.filter((i) => (i.created_at ?? '').slice(0, 10) === today)
+  const cashByMethod: Record<string, number> = { Cash: 0, UPI: 0, Credit: 0 }
+  for (const i of todaysInvoices) {
+    const m = i.payment_method || 'Cash'
+    cashByMethod[m] = (cashByMethod[m] ?? 0) + Number(i.advance)
+  }
+  const collectedToday = cashByMethod.Cash + cashByMethod.UPI + cashByMethod.Credit
+  const methodTiles: { key: string; label: string; icon: string; color: string }[] = [
+    { key: 'Cash', label: 'Cash', icon: '💵', color: 'var(--green)' },
+    { key: 'UPI', label: 'UPI', icon: '📱', color: 'var(--blue)' },
+    { key: 'Credit', label: 'Credit', icon: '🧾', color: 'var(--gold)' },
+  ]
 
   if (loading) return <Empty>Loading dashboard…</Empty>
 
@@ -191,27 +203,21 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      <Card title="Today's Deliveries">
-        {todaysDeliveries.length === 0 ? (
-          <Empty>No deliveries scheduled for today.</Empty>
-        ) : (
-          <div className="table-wrap">
-            <table className="dt">
-              <thead><tr><th>Invoice</th><th>Customer</th><th>Trial</th><th className="r">Balance</th><th></th></tr></thead>
-              <tbody>
-                {todaysDeliveries.map((i) => (
-                  <tr key={i.id}>
-                    <td><strong>{i.invoice_number}</strong></td>
-                    <td>{i.customer_name}</td>
-                    <td>{shortDate(i.trial_date)}</td>
-                    <td className="r" style={{ color: 'var(--red)' }}>{inr(i.balance_due)}</td>
-                    <td><Link to="/customers" className="btn btn-outline" style={{ padding: '4px 10px', fontSize: '0.7rem' }}>View</Link></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+      <Card title={`Today's Cash Summary — ${todaysInvoices.length} bill${todaysInvoices.length === 1 ? '' : 's'}`}>
+        <div className="g3 mb16">
+          {methodTiles.map((t) => (
+            <div key={t.key} className="kpi-tile" style={{ borderTop: `3px solid ${t.color}` }}>
+              <div style={{ fontSize: '1.3rem' }}>{t.icon}</div>
+              <div className="kpi-val" style={{ color: t.color }}>{inr(cashByMethod[t.key])}</div>
+              <div className="kpi-key">{t.label}</div>
+            </div>
+          ))}
+        </div>
+        <div className="sum-row total">
+          <span>Total Collected Today</span>
+          <span style={{ color: 'var(--green)' }}>{inr(collectedToday)}</span>
+        </div>
+        {todaysInvoices.length === 0 && <Empty>No sales yet today.</Empty>}
       </Card>
     </>
   )

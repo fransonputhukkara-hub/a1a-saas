@@ -4,6 +4,7 @@ import { adjustStock } from '../lib/inventory'
 import type { Invoice, SalesReturn as SRRow, LineItem } from '../lib/types'
 import { inr, today, shortDate } from '../lib/format'
 import { Card, PageHeader, Pill, Field, Input, Select, Empty } from '../components/ui'
+import SuccessModal from '../components/SuccessModal'
 
 const blank = (): LineItem => ({ name: '', qty: 1, rate: 0 })
 
@@ -18,6 +19,7 @@ export default function SalesReturn() {
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<{ customer: string; total: number } | null>(null)
 
   function load() {
     supabase.from('invoices').select('*').order('created_at', { ascending: false }).then(({ data }) => setInvoices((data as Invoice[]) ?? []))
@@ -56,7 +58,7 @@ export default function SalesReturn() {
       if (e) throw e
       // Returned goods come back into stock (unless it's a stitching service)
       await adjustStock(clean, 1)
-      setMsg('Sales return processed ✅')
+      setSuccess({ customer: selectedInvoice?.customer_name ?? 'Walk-in', total: subtotal })
       setItems([blank()]); setInvoiceId('')
       load()
     } catch (err) {
@@ -68,6 +70,19 @@ export default function SalesReturn() {
 
   return (
     <>
+      {success && (
+        <SuccessModal
+          title="Return Processed Successfully!"
+          subtitle="The returned items have been added back to stock."
+          details={[
+            { label: 'Customer', value: success.customer },
+            { label: 'Credit Note Total', value: inr(success.total) },
+            { label: 'Date & Time', value: new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) },
+          ]}
+          onClose={() => setSuccess(null)}
+          actions={<button className="btn btn-gold" style={{ gridColumn: '1 / -1' }} onClick={() => setSuccess(null)}>Done</button>}
+        />
+      )}
       <PageHeader
         title="Sales Return"
         sub="Process customer returns and issue credit notes"

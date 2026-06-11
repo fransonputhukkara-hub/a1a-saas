@@ -4,6 +4,7 @@ import { adjustStock } from '../lib/inventory'
 import type { Purchase as PurchaseRow, LineItem, Supplier } from '../lib/types'
 import { inr, today, shortDate } from '../lib/format'
 import { Card, PageHeader, Pill, Field, Input, Select, Empty } from '../components/ui'
+import SuccessModal from '../components/SuccessModal'
 
 const CATEGORIES = ['Fabric', 'Readymade', 'Stitching', 'Accessories', 'Service', 'Uncategorised']
 const blank = (): LineItem => ({ name: '', qty: 1, rate: 0, category: 'Fabric' })
@@ -23,6 +24,7 @@ export default function Purchase() {
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<{ supplier: string; total: number; edit: boolean } | null>(null)
   // When set, we are editing an existing purchase rather than creating a new one.
   // originalItems is the snapshot of what was saved, so stock only moves by the delta.
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -157,6 +159,7 @@ export default function Purchase() {
       }
       // Remember this vendor for future searches.
       await upsertSupplier(supplier.trim(), supplierPhone.trim())
+      setSuccess({ supplier: supplier.trim(), total: grandTotal, edit: !!editingId })
       resetForm()
       load()
     } catch (err) {
@@ -168,6 +171,19 @@ export default function Purchase() {
 
   return (
     <>
+      {success && (
+        <SuccessModal
+          title={success.edit ? 'Purchase Updated!' : 'Purchase Saved Successfully!'}
+          subtitle="Stock has been updated in your inventory."
+          details={[
+            { label: 'Supplier', value: success.supplier },
+            { label: 'Total Amount', value: inr(success.total) },
+            { label: 'Date & Time', value: new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) },
+          ]}
+          onClose={() => setSuccess(null)}
+          actions={<button className="btn btn-gold" style={{ gridColumn: '1 / -1' }} onClick={() => setSuccess(null)}>Done</button>}
+        />
+      )}
       <PageHeader
         title={editingId ? 'Edit Purchase' : 'Purchase Entry'}
         sub={editingId ? 'Update this bill — stock moves only by the change' : 'Record stock purchased from suppliers'}
