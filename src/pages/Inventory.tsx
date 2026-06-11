@@ -8,7 +8,7 @@ import { useShop } from '../lib/ShopContext'
 
 const emptyForm = {
   id: '' as string | '',
-  name: '', sku: '', category: 'Fabric', barcode: '',
+  name: '', color: '', sku: '', category: 'Fabric', barcode: '',
   in_stock: 0, min_level: 5, buying_rate: 0, selling_rate: 0, online: true,
 }
 
@@ -41,8 +41,13 @@ export default function Inventory() {
 
   async function saveForm() {
     if (!form.name.trim()) return
+    // Style name + optional Colour → a unique sellable variant.
+    const base = form.name.trim()
+    const color = form.color.trim()
     const payload = {
-      name: form.name.trim(),
+      name: color ? `${base} - ${color}` : base,
+      group_name: base,
+      color: color || null,
       sku: form.sku.trim() || null,
       category: form.category,
       barcode: form.barcode.trim() || generateBarcode(),
@@ -61,7 +66,8 @@ export default function Inventory() {
 
   function edit(it: InventoryItem) {
     setForm({
-      id: it.id, name: it.name, sku: it.sku ?? '', category: it.category ?? 'Fabric',
+      id: it.id, name: it.group_name ?? it.name, color: it.color ?? '',
+      sku: it.sku ?? '', category: it.category ?? 'Fabric',
       barcode: it.barcode ?? '',
       in_stock: Number(it.in_stock), min_level: Number(it.min_level),
       buying_rate: Number(it.buying_rate), selling_rate: Number(it.selling_rate),
@@ -159,13 +165,22 @@ export default function Inventory() {
       {showForm && (
         <Card title={form.id ? 'Edit Product' : 'Add Product'} className="mb16">
           <div className="form-row3">
-            <Field label="Product Name"><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
-            <Field label="SKU"><Input value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} /></Field>
+            <Field label="Product / Style Name"><Input value={form.name} placeholder="e.g. Raja Rani Saree" onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
+            <Field label="Colour (optional)"><Input value={form.color} placeholder="e.g. Red" onChange={(e) => setForm({ ...form, color: e.target.value })} /></Field>
             <Field label="Category">
               <Select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
                 {categories.map((c) => <option key={c}>{c}</option>)}
               </Select>
             </Field>
+          </div>
+          {form.name.trim() && form.color.trim() && (
+            <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: -6, marginBottom: 10 }}>
+              Saved as <strong>{form.name.trim()} - {form.color.trim()}</strong> · add each colour as its own entry (own stock).
+            </div>
+          )}
+          <div className="form-row">
+            <Field label="SKU"><Input value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} /></Field>
+            <div />
           </div>
           <div className="form-row">
             <Field label="Barcode">

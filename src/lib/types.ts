@@ -102,6 +102,8 @@ export interface InventoryItem {
   selling_rate: number
   barcode: string | null
   online: boolean
+  group_name: string | null
+  color: string | null
   created_at: string
 }
 
