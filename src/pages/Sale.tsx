@@ -9,6 +9,21 @@ import SuccessModal from '../components/SuccessModal'
 
 const blankItem = (): LineItem => ({ name: '', qty: 1, rate: 0 })
 
+interface HeldBill {
+  id: string
+  ts: number
+  custName: string
+  custPhone: string
+  custId: string | null
+  custConsent: boolean
+  items: LineItem[]
+  discount: number
+  advance: number
+  paymentMethod: string
+  notes: string
+}
+const HELD_KEY = 'held_bills'
+
 export default function Sale() {
   const { shop } = useShop()
   const [customers, setCustomers] = useState<Customer[]>([])
@@ -33,6 +48,8 @@ export default function Sale() {
   const [saved, setSaved] = useState<Invoice | null>(null)
   const [showSuccess, setShowSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [held, setHeld] = useState<HeldBill[]>([])
+  const [showHeld, setShowHeld] = useState(false)
 
   useEffect(() => {
     supabase
@@ -44,7 +61,42 @@ export default function Sale() {
       .from('inventory')
       .select('*')
       .then(({ data }) => setInventory((data as InventoryItem[]) ?? []))
+    try {
+      const raw = localStorage.getItem(HELD_KEY)
+      if (raw) setHeld(JSON.parse(raw))
+    } catch { /* ignore */ }
   }, [])
+
+  function persistHeld(list: HeldBill[]) {
+    setHeld(list)
+    try { localStorage.setItem(HELD_KEY, JSON.stringify(list)) } catch { /* ignore */ }
+  }
+  function clearForm() {
+    setCustId(null); setCustName(''); setCustPhone('+91 '); setCustConsent(false)
+    setNotes(''); setItems([blankItem()]); setDiscount(0); setAdvance(0); setPaymentMethod('Cash')
+    setError(null)
+  }
+  function holdBill() {
+    const clean = items.filter((it) => it.name.trim() && Number(it.qty) > 0)
+    if (!custName.trim() && clean.length === 0) return setError('Nothing to hold yet.')
+    const bill: HeldBill = {
+      id: crypto.randomUUID(), ts: Date.now(),
+      custName, custPhone, custId, custConsent,
+      items, discount, advance, paymentMethod, notes,
+    }
+    persistHeld([bill, ...held])
+    clearForm()
+  }
+  function resumeBill(b: HeldBill) {
+    setCustId(b.custId); setCustName(b.custName); setCustPhone(b.custPhone); setCustConsent(b.custConsent)
+    setNotes(b.notes); setItems(b.items.length ? b.items : [blankItem()])
+    setDiscount(b.discount); setAdvance(b.advance); setPaymentMethod(b.paymentMethod)
+    persistHeld(held.filter((x) => x.id !== b.id))
+    setShowHeld(false)
+  }
+  function removeHeld(id: string) {
+    persistHeld(held.filter((x) => x.id !== id))
+  }
 
   function handleScan(rawCode: string) {
     const code = rawCode.trim()
@@ -322,11 +374,49 @@ export default function Sale() {
         title="New Sale / Invoice"
         sub="Bill stitching, readymade or fabric to customers"
         actions={
-          <button className="btn btn-gold" onClick={save} disabled={saving}>
-            {saving ? 'Saving…' : 'Generate Invoice'}
-          </button>
+          <>
+            {held.length > 0 && (
+              <button className="btn btn-outline" onClick={() => setShowHeld(true)}>⏸ Held ({held.length})</button>
+            )}
+            <button className="btn btn-outline" onClick={holdBill} disabled={saving}>⏸ Hold</button>
+            <button className="btn btn-gold" onClick={save} disabled={saving}>
+              {saving ? 'Saving…' : 'Generate Invoice'}
+            </button>
+          </>
         }
       />
+
+      {showHeld && (
+        <div className="modal-overlay" onClick={() => setShowHeld(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Held Bills ({held.length})</h3>
+              <button className="del-btn" onClick={() => setShowHeld(false)}>✕</button>
+            </div>
+            {held.length === 0 ? <div style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>No held bills.</div> : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {held.map((b) => {
+                  const sub = b.items.reduce((s, it) => s + Number(it.qty || 0) * Number(it.rate || 0), 0)
+                  return (
+                    <div key={b.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 12px', borderRadius: 10, background: 'rgba(0,0,0,0.03)' }}>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{b.custName || 'Walk-in'}</div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>
+                          {b.items.filter((i) => i.name.trim()).length} items · {inr(Math.max(0, sub - Number(b.discount || 0)))} · {new Date(b.ts).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button className="btn btn-gold btn-sm" onClick={() => resumeBill(b)}>Resume</button>
+                        <button className="btn btn-outline btn-sm btn-danger" onClick={() => removeHeld(b.id)}>✕</button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       {error && <div className="alert-strip a-red">{error}</div>}
       <div className="g-sidebar">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

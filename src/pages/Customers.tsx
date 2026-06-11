@@ -243,9 +243,16 @@ export default function Customers() {
               <div className="kpi-tile"><div className="kpi-val">{inr(selected.lifetime_value)}</div><div className="kpi-key">Lifetime</div></div>
               <div className="kpi-tile"><div className="kpi-val" style={{ color: 'var(--red)' }}>{inr(balances[selected.id] ?? 0)}</div><div className="kpi-key">Balance</div></div>
             </div>
-            <div className="card-title">Invoice History</div>
+            {history.length > 0 && (
+              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: '0.78rem', color: 'var(--muted)', marginBottom: 12, padding: '10px 12px', background: 'rgba(0,0,0,0.03)', borderRadius: 10 }}>
+                <span>🛍️ <strong style={{ color: 'var(--ink)' }}>{history.length}</strong> visit{history.length === 1 ? '' : 's'}</span>
+                <span>First: <strong style={{ color: 'var(--ink)' }}>{shortDate(history[history.length - 1].created_at)}</strong></span>
+                <span>Last: <strong style={{ color: 'var(--ink)' }}>{shortDate(history[0].created_at)}</strong></span>
+              </div>
+            )}
+            <div className="card-title">Visit &amp; Invoice History</div>
             {history.length === 0 ? (
-              <Empty>No invoices for this customer yet.</Empty>
+              <Empty>No visits for this customer yet.</Empty>
             ) : (
               <div className="table-wrap">
                 <table className="dt">
