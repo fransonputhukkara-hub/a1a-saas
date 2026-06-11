@@ -48,7 +48,7 @@ export default function InvoicePublic() {
         <div style={metaBar}>
           <div><div style={metaLabel}>Invoice</div><div style={metaVal}>#{inv.invoice_number}</div></div>
           <div><div style={metaLabel}>Date</div><div style={metaVal}>{longDate(inv.created_at)}</div></div>
-          <div><div style={metaLabel}>Payment</div><div style={metaVal}>{inv.payment_method}</div></div>
+          <div><div style={metaLabel}>Payment</div><div style={metaVal}>{inv.payment_method ?? 'Cash'}</div></div>
         </div>
 
         <div style={{ padding: '20px 24px' }}>
@@ -84,7 +84,7 @@ export default function InvoicePublic() {
               <Row label="Subtotal" value={inr(inv.subtotal)} />
               {Number(inv.discount) > 0 && <Row label="Discount" value={`– ${inr(inv.discount)}`} green />}
               <Row label="Total" value={inr(inv.total)} bold />
-              <Row label={`Paid (${inv.payment_method})`} value={inr(inv.advance)} green />
+              <Row label={`Paid (${inv.payment_method ?? 'Cash'})`} value={inr(inv.advance)} green />
               {balance > 0
                 ? <Row label="Balance Due" value={inr(balance)} red bold />
                 : <Row label="Paid in Full ✓" value="" green bold />}

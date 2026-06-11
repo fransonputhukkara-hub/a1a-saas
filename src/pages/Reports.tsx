@@ -63,7 +63,7 @@ export default function Reports() {
 
   // ── Filtered datasets ──
   const fInvoices = useMemo(() => invoices.filter((i) => within(i.created_at)), [invoices, range, from, to])
-  const fPurchases = useMemo(() => purchases.filter((p) => within(p.created_at)), [purchases, range, from, to])
+  const fPurchases = useMemo(() => purchases.filter((p) => within(p.date)), [purchases, range, from, to])
   const fReturns = useMemo(() => returns.filter((r) => within(r.date)), [returns, range, from, to])
   const fExpenses = useMemo(() => expenses.filter((e) => within(e.date)), [expenses, range, from, to])
 

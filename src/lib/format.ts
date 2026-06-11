@@ -170,7 +170,7 @@ export function invoiceMessage(inv: Invoice, shop: ShopLike): string {
     `Customer: ${inv.customer_name ?? ''}\n\n` +
     `Items:\n${lines}\n\n` +
     `Total: ${inr(inv.total)}\n` +
-    `Paid (${inv.payment_method}): ${inr(inv.advance)}\n` +
+    `Paid (${inv.payment_method ?? 'Cash'}): ${inr(inv.advance)}\n` +
     balanceLine +
     `\nDelivery: ${longDate(inv.delivery_date)}\n` +
     link +
