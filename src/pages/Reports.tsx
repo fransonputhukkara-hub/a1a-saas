@@ -156,10 +156,21 @@ export default function Reports() {
         }
       />
 
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 18, padding: 6, background: 'rgba(26,26,46,0.06)', borderRadius: 14, border: '1px solid rgba(0,0,0,0.06)' }}>
         {TABS.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)}
-            className={`btn btn-sm ${tab === t.id ? 'btn-primary' : 'btn-outline'}`}>{t.label}</button>
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            style={{
+              flex: '1 1 auto', minWidth: 110, padding: '10px 14px', borderRadius: 10, cursor: 'pointer',
+              fontSize: '0.85rem', fontWeight: 700, border: 'none', transition: 'all 0.15s',
+              background: tab === t.id ? 'var(--ink)' : '#fff',
+              color: tab === t.id ? '#fff' : 'var(--ink)',
+              boxShadow: tab === t.id ? '0 4px 12px rgba(26,26,46,0.25)' : '0 1px 2px rgba(0,0,0,0.06)',
+            }}
+          >
+            {t.label}
+          </button>
         ))}
       </div>
 
