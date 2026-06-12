@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import type { Invoice, Purchase, InventoryItem, Expense } from '../lib/types'
+import type { Invoice, Purchase, InventoryItem, Expense, SalesReturn } from '../lib/types'
 import { inr, inrShort, isThisMonth } from '../lib/format'
 import { Card, StatCard, Pill, Empty } from '../components/ui'
 
@@ -9,6 +9,7 @@ export default function Dashboard() {
   const [purchases, setPurchases] = useState<Purchase[]>([])
   const [inventory, setInventory] = useState<InventoryItem[]>([])
   const [expenses, setExpenses] = useState<Expense[]>([])
+  const [returns, setReturns] = useState<SalesReturn[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -17,11 +18,13 @@ export default function Dashboard() {
       supabase.from('purchases').select('*').order('created_at', { ascending: false }),
       supabase.from('inventory').select('*'),
       supabase.from('expenses').select('*'),
-    ]).then(([inv, pur, stock, exp]) => {
+      supabase.from('sales_returns').select('*'),
+    ]).then(([inv, pur, stock, exp, ret]) => {
       setInvoices((inv.data as Invoice[]) ?? [])
       setPurchases((pur.data as Purchase[]) ?? [])
       setInventory((stock.data as InventoryItem[]) ?? [])
       setExpenses((exp.data as Expense[]) ?? [])
+      setReturns((ret.data as SalesReturn[]) ?? [])
       setLoading(false)
     })
   }, [])
@@ -50,12 +53,19 @@ export default function Dashboard() {
   const today = new Date().toISOString().slice(0, 10)
   const recent = invoices.slice(0, 5)
 
-  // Daily cash summary — today's collections grouped by payment method.
+  // Daily cash summary — today's collections grouped by payment method,
+  // NET of cash/UPI refunds paid out today (true cash-in-hand).
   const todaysInvoices = invoices.filter((i) => (i.created_at ?? '').slice(0, 10) === today)
   const cashByMethod: Record<string, number> = { Cash: 0, UPI: 0, Credit: 0 }
   for (const i of todaysInvoices) {
     const m = i.payment_method || 'Cash'
     cashByMethod[m] = (cashByMethod[m] ?? 0) + Number(i.advance)
+  }
+  let refundsToday = 0
+  for (const r of returns.filter((r) => (r.date ?? '').slice(0, 10) === today)) {
+    const m = (r.refund_method ?? '').toLowerCase()
+    if (m.includes('cash')) { cashByMethod.Cash -= Number(r.total); refundsToday += Number(r.total) }
+    else if (m.includes('upi')) { cashByMethod.UPI -= Number(r.total); refundsToday += Number(r.total) }
   }
   const collectedToday = cashByMethod.Cash + cashByMethod.UPI + cashByMethod.Credit
   const methodTiles: { key: string; label: string; icon: string; color: string }[] = [
@@ -213,11 +223,14 @@ export default function Dashboard() {
             </div>
           ))}
         </div>
+        {refundsToday > 0 && (
+          <div className="sum-row"><span>Less: Refunds paid today</span><span style={{ color: 'var(--red)' }}>– {inr(refundsToday)}</span></div>
+        )}
         <div className="sum-row total">
-          <span>Total Collected Today</span>
+          <span>Net Cash in Hand Today</span>
           <span style={{ color: 'var(--green)' }}>{inr(collectedToday)}</span>
         </div>
-        {todaysInvoices.length === 0 && <Empty>No sales yet today.</Empty>}
+        {todaysInvoices.length === 0 && refundsToday === 0 && <Empty>No sales yet today.</Empty>}
       </Card>
     </>
   )

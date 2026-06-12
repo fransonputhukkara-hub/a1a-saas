@@ -29,16 +29,6 @@ export async function adjustStock(items: LineItem[], sign: 1 | -1) {
       match.in_stock = next
     } else if (sign === 1) {
       // New item discovered via a purchase — start tracking it.
-<<<<<<< HEAD
-      await supabase.from('inventory').insert({
-        name,
-        category: it.category?.trim() || 'Uncategorised',
-        in_stock: qty,
-        buying_rate: Number(it.rate || 0),
-        selling_rate: Math.round(Number(it.rate || 0) * 0),
-        online: false, // new purchase items aren't shown online until reviewed (need a photo)
-      })
-=======
       const { data: created } = await supabase
         .from('inventory')
         .insert({
@@ -53,7 +43,6 @@ export async function adjustStock(items: LineItem[], sign: 1 | -1) {
         .single()
       // Track it locally so a duplicate line of the same new item updates, not re-inserts.
       if (created) stock.push(created as InventoryItem)
->>>>>>> a4ced91 (Audit fixes: stock oversell + duplicate-line)
     }
   }
 }
