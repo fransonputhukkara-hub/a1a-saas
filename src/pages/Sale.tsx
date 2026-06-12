@@ -177,15 +177,30 @@ export default function Sale() {
     if (!custName.trim()) return setError('Enter a customer name.')
     if (cleanItems.length === 0) return setError('Add at least one item.')
 
+<<<<<<< HEAD
     // Stock-only billing: every item must exist in inventory with enough stock.
     // Items only enter inventory via a Purchase entry.
+=======
+    // Stock-only billing: every item must exist in inventory, and the TOTAL
+    // quantity across all lines of the same product must fit available stock.
+    const needByProduct = new Map<string, number>()
+>>>>>>> a4ced91 (Audit fixes: stock oversell + duplicate-line)
     for (const it of cleanItems) {
       const match = inventory.find((p) => p.name.toLowerCase() === it.name.trim().toLowerCase())
       if (!match) {
         return setError(`"${it.name}" is not in inventory. Add stock via a Purchase entry first.`)
       }
+<<<<<<< HEAD
       if (Number(it.qty) > Number(match.in_stock)) {
         return setError(`Only ${match.in_stock} of "${match.name}" in stock — can't bill ${it.qty}.`)
+=======
+      needByProduct.set(match.id, (needByProduct.get(match.id) ?? 0) + Number(it.qty))
+    }
+    for (const [id, needed] of needByProduct) {
+      const p = inventory.find((x) => x.id === id)!
+      if (needed > Number(p.in_stock)) {
+        return setError(`Only ${p.in_stock} of "${p.name}" in stock — bill totals ${needed}.`)
+>>>>>>> a4ced91 (Audit fixes: stock oversell + duplicate-line)
       }
     }
 

@@ -19,13 +19,17 @@ export async function adjustStock(items: LineItem[], sign: 1 | -1) {
 
     const match = stock.find((s) => s.name.toLowerCase() === name.toLowerCase())
     if (match) {
-      const next = Number(match.in_stock) + sign * qty
+      const next = Math.max(0, Number(match.in_stock) + sign * qty)
       await supabase
         .from('inventory')
-        .update({ in_stock: Math.max(0, next) })
+        .update({ in_stock: next })
         .eq('id', match.id)
+      // Keep the in-memory value current so repeated lines of the SAME product
+      // in one bill accumulate correctly instead of re-using stale stock.
+      match.in_stock = next
     } else if (sign === 1) {
       // New item discovered via a purchase — start tracking it.
+<<<<<<< HEAD
       await supabase.from('inventory').insert({
         name,
         category: it.category?.trim() || 'Uncategorised',
@@ -34,6 +38,22 @@ export async function adjustStock(items: LineItem[], sign: 1 | -1) {
         selling_rate: Math.round(Number(it.rate || 0) * 0),
         online: false, // new purchase items aren't shown online until reviewed (need a photo)
       })
+=======
+      const { data: created } = await supabase
+        .from('inventory')
+        .insert({
+          name,
+          category: it.category?.trim() || 'Uncategorised',
+          in_stock: qty,
+          buying_rate: Number(it.rate || 0),
+          selling_rate: Math.round(Number(it.rate || 0) * 1.5),
+          online: false, // new purchase items aren't shown online until reviewed (need a photo)
+        })
+        .select()
+        .single()
+      // Track it locally so a duplicate line of the same new item updates, not re-inserts.
+      if (created) stock.push(created as InventoryItem)
+>>>>>>> a4ced91 (Audit fixes: stock oversell + duplicate-line)
     }
   }
 }
