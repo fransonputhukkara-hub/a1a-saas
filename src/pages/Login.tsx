@@ -68,8 +68,14 @@ export default function Login() {
       <div className="login-hero">
         <div className="kasavu-border" />
         <div className="login-hero-body">
-          <div className="login-hero-logo"><ShopLogo size={92} radius={20} /></div>
-          <h1 className="login-hero-name">{shop.name}</h1>
+          {shop.logo_url ? (
+            <img src={shop.logo_url} alt={shop.name} style={{ height: 96, width: 'auto', maxWidth: '90%', objectFit: 'contain', marginBottom: 8 }} />
+          ) : (
+            <>
+              <div className="login-hero-logo"><ShopLogo size={92} radius={20} /></div>
+              <h1 className="login-hero-name">{shop.name}</h1>
+            </>
+          )}
           <div className="login-hero-sub">Handloom · Pure Silks · Heritage Weaves of Kerala</div>
           <div className="login-hero-orn">✦ ❖ ✦</div>
           <p className="login-hero-quote">

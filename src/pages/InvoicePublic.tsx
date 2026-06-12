@@ -38,10 +38,11 @@ export default function InvoicePublic() {
       <div style={card}>
         <div style={topBar} />
         <div style={header}>
-          {shop.logo_url && (
-            <img src={shop.logo_url} alt={shop.name} style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover', background: '#fff', marginBottom: 10 }} />
+          {shop.logo_url ? (
+            <img src={shop.logo_url} alt={shop.name} style={{ height: 70, width: 'auto', maxWidth: '85%', objectFit: 'contain', marginBottom: 8 }} />
+          ) : (
+            <div style={{ fontFamily: 'Georgia, serif', fontSize: '1.5rem', fontWeight: 700, color: '#f5d98a', letterSpacing: '0.04em' }}>{shop.name}</div>
           )}
-          <div style={{ fontFamily: 'Georgia, serif', fontSize: '1.5rem', fontWeight: 700, color: '#f5d98a', letterSpacing: '0.04em' }}>{shop.name}</div>
           <div style={{ fontStyle: 'italic', fontSize: '0.85rem', color: 'rgba(245,217,138,0.75)', marginTop: 4 }}>{shop.location} · {shop.phone}</div>
         </div>
 

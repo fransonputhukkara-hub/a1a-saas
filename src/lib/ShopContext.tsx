@@ -75,7 +75,7 @@ export function ShopLogo({ size = 64, radius = 16 }: { size?: number; radius?: n
       <img
         src={shop.logo_url}
         alt={shop.name}
-        style={{ width: size, height: size, borderRadius: radius, objectFit: 'cover', background: '#fff' }}
+        style={{ width: size, height: size, borderRadius: radius, objectFit: 'contain', background: 'transparent' }}
       />
     )
   }
